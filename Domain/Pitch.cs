@@ -5,12 +5,9 @@ public readonly record struct Pitch(Octave Octave, Note Note) : IComparable<Pitc
     private static (Pitch Pitch, Frequency Frequency) Reference => 
         (new Pitch(new Octave(4), Note.Parse("A")), new Frequency(440));
 
-    public int Index => Octave * Note.TotalNotes + Note;
+    private int Index => Octave * Note.TotalNotes + Note;
     
-    public Frequency Frequency => CalculateRelativeFrequency(
-        Reference.Frequency, 
-        Reference.Pitch.Index,
-        Index);
+    public Frequency Frequency => CalculateRelativeFrequency(Index);
 
     public Pitch Transpose(Interval interval)
     {
@@ -22,30 +19,27 @@ public readonly record struct Pitch(Octave Octave, Note Note) : IComparable<Pitc
     
     public static Pitch FromIndex(int index)
     {
-        int Modulo(int x, int m) => (x % m + m) % m;
-        
         var octave = new Octave(index / Note.TotalNotes);
-        var note = new Note(Modulo(index, Note.TotalNotes));
+        var note = new Note(Math.Modulo(index, Note.TotalNotes));
         
         return new Pitch(octave, note);
     }
 
     public static Pitch FromFrequency(Frequency frequency)
     {
-        var index = GetIndexFromFrequency(Reference.Frequency, Reference.Pitch.Index, frequency);
-        return FromIndex(index);
+        return FromIndex(GetIndexFromFrequency(frequency));
     }
 
-    private static Frequency CalculateRelativeFrequency(Frequency referenceFrequency, int referenceIndex, int index)
+    private static Frequency CalculateRelativeFrequency(int index)
     {
         return new Frequency(
-            referenceFrequency * System.Math.Pow(2, (index - referenceIndex) / (double)Note.TotalNotes));
+            Reference.Frequency * System.Math.Pow(2, (index - Reference.Pitch.Index) / (double)Note.TotalNotes));
     }
     
-    private static int GetIndexFromFrequency(Frequency referenceFrequency, int referenceIndex, Frequency frequency)
+    private static int GetIndexFromFrequency(Frequency frequency)
     {
         return (int)System.Math.Round(
-            System.Math.Log2(frequency / referenceFrequency) * Note.TotalNotes) + referenceIndex;
+            System.Math.Log2(frequency / Reference.Frequency) * Note.TotalNotes) + Reference.Pitch.Index;
     }
 
     public int CompareTo(Pitch other)

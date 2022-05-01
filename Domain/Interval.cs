@@ -8,6 +8,11 @@ public readonly record struct Interval : IComparable<Interval>
     }
     
     private int Value { get; }
+
+    public Interval Normalize()
+    {
+        return new Interval(Math.Modulo(Value, Note.TotalNotes));
+    }
     
     public int CompareTo(Interval other)
     {

@@ -54,13 +54,13 @@ public readonly record struct Frequency : IComparable<Frequency>
         return new Frequency(d);
     }
     
-    public static Frequency operator +(Frequency first, Frequency second)
+    public static Frequency operator *(Frequency first, Frequency second)
     {
-        return new Frequency(first.Hertz + second.Hertz);
+        return new Frequency(first.Hertz * second.Hertz);
     }
     
-    public static Frequency operator -(Frequency first, Frequency second)
+    public static Frequency operator /(Frequency first, Frequency second)
     {
-        return new Frequency(first.Hertz - second.Hertz);
+        return new Frequency(first.Hertz / second.Hertz);
     }
 }
