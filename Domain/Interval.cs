@@ -2,6 +2,8 @@ namespace Domain;
 
 public readonly record struct Interval : IComparable<Interval>
 {
+    public static Interval Zero => new (0);
+    
     public Interval(int value)
     {
         Value = value;

@@ -22,13 +22,13 @@ public readonly record struct Intervals : IComparable<Intervals>
 
     public Intervals Normalize()
     {
-        return FromEnumerable(Values.Select(i => i.Normalize()));
+        return FromEnumerable(Values.Select(i => i.Normalize()).Append(Interval.Zero));
     }
 
     public static Intervals FromEnumerable(IEnumerable<Interval> intervals)
     {
         return new Intervals(
-            intervals.ToImmutableHashSet()
+            intervals.Distinct()
                 .Select(i => (int)System.Math.Pow(2, i))
                 .Sum());
     }

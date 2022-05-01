@@ -6,9 +6,13 @@ public sealed record String
     public String(Pitch tuning, IEnumerable<Interval> intervals)
     {
         Tuning = tuning;
-        Intervals = intervals.ToImmutableHashSet().OrderBy(i => i).ToImmutableList();
+        
+        Intervals = intervals.Distinct()
+            .OrderBy(i => i)
+            .ToImmutableList();
 
-        foreach (var interval in Intervals) AssertInterval(interval);
+        if (Intervals.Any(i => i < 0))
+            throw new ArgumentOutOfRangeException(nameof(intervals), intervals, null);
     }
     
     public Pitch Tuning { get; }
@@ -24,24 +28,26 @@ public sealed record String
 
     public bool IsPressed(Interval interval)
     {
-        AssertInterval(interval);
         return Intervals.Contains(interval);
     }
     
     public String PressFret(Interval interval)
     {
-        AssertInterval(interval);
-        return new String(Tuning, Intervals.Append(interval));
+        return PressFrets(new[] { interval });
+    }
+    
+    public String PressFrets(IEnumerable<Interval> intervals)
+    {
+        return new String(Tuning, Intervals.Concat(intervals));
     }
     
     public String DepressFret(Interval interval)
     {
-        AssertInterval(interval);
-        return new String(Tuning, Intervals.Except(new[] { interval }));
+        return DepressFrets(new[] { interval });
     }
-
-    private static void AssertInterval(Interval interval)
+    
+    public String DepressFrets(IEnumerable<Interval> intervals)
     {
-        if (interval < 0) throw new ArgumentOutOfRangeException(nameof(interval), interval, null);
+        return new String(Tuning, Intervals.Except(intervals));
     }
 }
