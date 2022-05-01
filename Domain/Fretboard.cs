@@ -19,6 +19,11 @@ public record Fretboard
         AssertStringIndex(stringIndex);
         return Strings[stringIndex].IsPressed(interval);
     }
+
+    public Fretboard Transpose(Interval interval)
+    {
+        return new Fretboard(Strings.Select(s => s.Transpose(interval)));
+    }
     
     public Fretboard PressFret(int stringIndex, Interval interval)
     {

@@ -13,6 +13,11 @@ public sealed record String
     
     public Pitch Tuning { get; }
 
+    public String Transpose(Interval interval)
+    {
+        return new String(Tuning + interval, Intervals);
+    }
+
     public IReadOnlyList<Pitch> Pitches => Intervals.Select(i => Tuning + i).ToImmutableList();
     
     public IReadOnlyList<Interval> Intervals { get; }

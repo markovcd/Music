@@ -3,66 +3,83 @@ using System.Collections.Immutable;
 
 namespace Domain;
 
-public sealed record Intervals : IReadOnlyCollection<Interval>
+public readonly record struct Intervals : IComparable<Intervals>
 {
-    private readonly ImmutableHashSet<Interval> intervals;
-    
-    public Intervals(IEnumerable<Interval> intervals)
+    public Intervals(int value)
     {
-        this.intervals = intervals.ToImmutableHashSet();
+        if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), value, null);
+        Value = value;
     }
-
-    public int Count => intervals.Count;
     
+    public int Value { get; }
+
+    public IReadOnlyList<Interval> Values => new BitArray(new[] { Value })
+        .Cast<bool>()
+        .Select((b, i) => (b, i))
+        .Where(t => t.b)
+        .Select(t => new Interval(t.i))
+        .ToImmutableList();
+
     public Intervals Normalize()
     {
-        return new Intervals(intervals.Select(i => i.Normalize()));
+        return FromEnumerable(Values.Select(i => i.Normalize()));
     }
 
-    public static Intervals FromInt(int identifier)
+    public static Intervals FromEnumerable(IEnumerable<Interval> intervals)
     {
-        if (identifier < 0) throw new ArgumentOutOfRangeException(nameof(identifier), identifier, null);
-        
         return new Intervals(
-            new BitArray(new [] { identifier })
-                .Cast<bool>()
-                .Select((b, i) => (b, i))
-                .Where(t => t.b)
-                .Select(t => new Interval(t.i)));
-    }
-
-    public IEnumerator<Interval> GetEnumerator()
-    {
-        return intervals.OrderBy(i => i).GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    public bool Equals(Intervals? other)
-    {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
-
-        return Count == other.Count 
-               && this.Zip(other)
-                   .All(t => t.First.Equals(t.Second));
+            intervals.ToImmutableHashSet()
+                .Select(i => (int)System.Math.Pow(2, i))
+                .Sum());
     }
     
-    public override int GetHashCode()
+    public override string ToString()
     {
-        const int prime1 = 11;
-        const int prime2 = 29;
-        
-        unchecked 
-        {
-            var hash = this.Aggregate(
-                prime1,
-                (current, note) => current * prime2 + note.GetHashCode());
+        return Value.ToString();
+    }
+    
+    public int CompareTo(Intervals other)
+    {
+        return Value.CompareTo(other.Value);
+    }
+    
+    public static bool operator >(Intervals first, Intervals second)
+    {
+        return first.CompareTo(second) > 0;
+    }
+    
+    public static bool operator >=(Intervals first, Intervals second)
+    {
+        return first.CompareTo(second) >= 0;
+    }
+    
+    public static bool operator <(Intervals first, Intervals second)
+    {
+        return second > first;
+    }
+    
+    public static bool operator <=(Intervals first, Intervals second)
+    {
+        return second >= first;
+    }
+    
+    public static implicit operator int(Intervals intervals)
+    {
+        return intervals.Value;
+    }
 
-            return hash * prime2 + EqualityContract.GetHashCode();
-        }
+    public static explicit operator Intervals(int i)
+    {
+        return new Intervals(i);
+    }
+    
+    public static Intervals operator +(Intervals first, Intervals second)
+    {
+        return new Intervals(first.Value + second.Value);
+    }
+    
+    public static Intervals operator -(Intervals first, Intervals second)
+    {
+        return new Intervals(first.Value - second.Value);
     }
 }

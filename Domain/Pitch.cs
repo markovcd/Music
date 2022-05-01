@@ -87,8 +87,18 @@ public readonly record struct Pitch(Octave Octave, Note Note) : IComparable<Pitc
         return pitch.Transpose(interval);
     }
     
+    public static Interval operator +(Pitch first, Pitch second)
+    {
+        return new Interval(first.Index + second.Index);
+    }
+    
     public static Pitch operator -(Pitch pitch, Interval interval)
     {
         return pitch.Transpose(-interval);
+    }
+    
+    public static Interval operator -(Pitch first, Pitch second)
+    {
+        return new Interval(first.Index - second.Index);
     }
 }
