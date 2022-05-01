@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace Domain;
 
-public record Intervals : IReadOnlyCollection<Interval>
+public sealed record Intervals : IReadOnlyCollection<Interval>
 {
     private readonly ImmutableHashSet<Interval> intervals;
     
@@ -12,6 +12,8 @@ public record Intervals : IReadOnlyCollection<Interval>
         this.intervals = intervals.ToImmutableHashSet();
     }
 
+    public int Count => intervals.Count;
+    
     public Intervals Normalize()
     {
         return new Intervals(intervals.Select(i => i.Normalize()));
@@ -39,5 +41,28 @@ public record Intervals : IReadOnlyCollection<Interval>
         return GetEnumerator();
     }
 
-    public int Count => intervals.Count;
+    public bool Equals(Intervals? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Count == other.Count 
+               && this.Zip(other)
+                   .All(t => t.First.Equals(t.Second));
+    }
+    
+    public override int GetHashCode()
+    {
+        const int prime1 = 11;
+        const int prime2 = 29;
+        
+        unchecked 
+        {
+            var hash = this.Aggregate(
+                prime1,
+                (current, note) => current * prime2 + note.GetHashCode());
+
+            return hash * prime2 + EqualityContract.GetHashCode();
+        }
+    }
 }
