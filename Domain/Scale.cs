@@ -18,13 +18,48 @@ public readonly record struct Scale : IComparable<Scale>
         .Select((b, i) => (b, i))
         .Where(t => t.b)
         .Select(t => new Interval(t.i))
+        .OrderBy(i => i)
         .ToImmutableList();
 
+    public Interval GetInterval(Degree degree)
+    {
+        AssertDegree(degree);
+        return Intervals[degree - 1];
+    }
+    
     public bool HasDegree(Degree degree)
     {
         return degree <= Intervals.Count;
     }
+
+    public Scale Transform(Degree degree)
+    {
+        AssertDegree(degree);
+        var intervals = Intervals;
+
+        var newRoot = intervals[degree - 1];
+
+        return FromEnumerable(
+            intervals.Select(i => new Interval(
+                Math.Modulo(i - newRoot, intervals.Max()))));
+    }
+
+    private void AssertDegree(Degree degree)
+    {
+        if (!HasDegree(degree))
+            throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
+    }
     
+    public IReadOnlyList<Interval> GetChord(Degree degree, Chord chord)
+    {
+        AssertDegree(degree);
+        
+        if (!chord.Degrees.All(HasDegree)) 
+            throw new ArgumentOutOfRangeException(nameof(chord), chord, null);
+        
+        
+    }
+
     public Scale Normalize()
     {
         return FromEnumerable(Intervals.Select(i => i.Normalize()).Append(Interval.Zero));

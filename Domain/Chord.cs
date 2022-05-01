@@ -18,6 +18,7 @@ public readonly record struct Chord
         .Select((b, i) => (b, i))
         .Where(t => t.b)
         .Select(t => new Degree(t.i))
+        .OrderBy(c => c)
         .ToImmutableList();
     
     public static Chord FromEnumerable(IEnumerable<Degree> degrees)
