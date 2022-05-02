@@ -61,8 +61,8 @@ public readonly record struct Scale : IComparable<Scale>
         
         if (!chord.Degrees.All(HasDegree)) 
             throw new ArgumentOutOfRangeException(nameof(chord), chord, null);
-        
-        
+
+        throw new NotImplementedException();
     }
 
     public Scale Normalize()

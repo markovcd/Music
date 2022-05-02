@@ -3,23 +3,23 @@ namespace Domain;
 public readonly record struct Pitch(Octave Octave, Note Note) : IComparable<Pitch>
 {
     private static (Pitch Pitch, Frequency Frequency) Reference => 
-        (new Pitch(new Octave(4), Note.Parse("A")), new Frequency(440));
+        (new Pitch(new Octave(4), new Note(9)), new Frequency(440));
 
-    private int Index => Octave * Note.TotalNotes + Note;
+    public int Index => Octave * Note.TotalNotes + Note;
     
     public Frequency Frequency => CalculateRelativeFrequency(Index);
 
     public Pitch Transpose(Interval interval)
     {
         var transposedNote = Note + interval;
-        var transposedOctave = Octave + new Octave ((interval - transposedNote + Note) / Note.TotalNotes);
+        var transposedOctave = Octave + new Octave((interval - transposedNote + Note) / Note.TotalNotes);
         
         return new Pitch(transposedOctave, transposedNote);
     }
     
     public static Pitch FromIndex(int index)
     {
-        var octave = new Octave(index / Note.TotalNotes);
+        var octave = new Octave((int)System.Math.Floor(index / (double)Note.TotalNotes));
         var note = new Note(Math.Modulo(index, Note.TotalNotes));
         
         return new Pitch(octave, note);
