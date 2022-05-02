@@ -48,7 +48,7 @@ public readonly record struct Scale : IComparable<Scale>
                 Math.Modulo(i - newRoot, Note.TotalNotes))));
     }
 
-    private static void AssertDegree(Degree degree, IReadOnlyList<Interval> intervals)
+    private static void AssertDegree(Degree degree, IReadOnlyCollection<Interval> intervals)
     {
         if (degree > intervals.Count)
             throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
