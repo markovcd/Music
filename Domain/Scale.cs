@@ -13,7 +13,7 @@ public readonly record struct Scale : IComparable<Scale>
     
     public int Value { get; }
 
-    public IReadOnlyList<Interval> GetIntervals()
+    public IReadOnlyList<Interval> GetAbsoluteIntervals()
     {
         return new BitArray(new[] { Value })
             .Cast<bool>()
@@ -26,19 +26,19 @@ public readonly record struct Scale : IComparable<Scale>
 
     public Interval GetInterval(Degree degree)
     {
-        var intervals = GetIntervals();
+        var intervals = GetAbsoluteIntervals();
         AssertDegree(degree, intervals);
         return intervals[degree - 1];
     }
     
     public bool HasDegree(Degree degree)
     {
-        return degree <= GetIntervals().Count;
+        return degree <= GetAbsoluteIntervals().Count;
     }
 
     public Scale Transform(Degree degree)
     {
-        var intervals = GetIntervals();
+        var intervals = GetAbsoluteIntervals();
         AssertDegree(degree, intervals);
 
         var newRoot = intervals[degree - 1];
@@ -56,7 +56,7 @@ public readonly record struct Scale : IComparable<Scale>
     
     public IReadOnlyList<Interval> GetChord(Degree degree, Chord chord)
     {
-        var intervals = GetIntervals();
+        var intervals = GetAbsoluteIntervals();
         AssertDegree(degree, intervals);
         
         if (!chord.Degrees.All(HasDegree)) 
@@ -67,7 +67,7 @@ public readonly record struct Scale : IComparable<Scale>
 
     public Scale Normalize()
     {
-        return FromEnumerable(GetIntervals().Select(i => i.Normalize()).Append(Interval.Zero));
+        return FromEnumerable(GetAbsoluteIntervals().Select(i => i.Normalize()).Append(Interval.Zero));
     }
 
     public static Scale FromEnumerable(IEnumerable<Interval> intervals)

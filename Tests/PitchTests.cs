@@ -52,7 +52,7 @@ public class PitchTests
    [DataRow(440, 4, 9)]
    [DataRow(349.2282314330039, 4, 5)]
    [DataRow(220, 3, 9)]
-   public void Frequency_ReturnsProperFrequency(double frequency, int octaveIndex, int noteIndex)
+   public void FromFrequency_ReturnsProperPitch(double frequency, int octaveIndex, int noteIndex)
    {
       var pitch = Pitch.FromFrequency(new Frequency(frequency));
       pitch.Octave.Should().Be(new Octave(octaveIndex));
@@ -72,16 +72,20 @@ public class PitchTests
    }
    
    [TestMethod]
-   public void DDD()
+   [DataRow(-2, -1, 10)]
+   [DataRow(-1, -1, 11)]
+   [DataRow(0, 0, 0)]
+   [DataRow(1, 0, 1)]
+   [DataRow(2, 0, 2)]
+   [DataRow(3, 0, 3)]
+   [DataRow(11, 0, 11)]
+   [DataRow(12, 1, 0)]
+   [DataRow(171, 14, 3)]
+   public void FromIndex_ConvertsFromOctaveAndNote(int index, int octave, int note)
    {
-      int firstIndex = 1;
-      int transposeIndex = -5;
-      int secondIndex = -4;
-      
-      var firstPitch = Pitch.FromIndex(firstIndex);
-      var d = Pitch.FromIndex(secondIndex);
-      
-      var secondPitch = firstPitch + new Interval(transposeIndex);
-      secondPitch.Should().Be(d);
+      var pitch = Pitch.FromIndex(index);
+
+      pitch.Octave.Should().Be(new Octave(octave));
+      pitch.Note.Should().Be(new Note(note));
    }
 }
