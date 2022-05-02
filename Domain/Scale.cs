@@ -13,46 +13,51 @@ public readonly record struct Scale : IComparable<Scale>
     
     public int Value { get; }
 
-    public IReadOnlyList<Interval> Intervals => new BitArray(new[] { Value })
-        .Cast<bool>()
-        .Select((b, i) => (b, i))
-        .Where(t => t.b)
-        .Select(t => new Interval(t.i))
-        .OrderBy(i => i)
-        .ToImmutableList();
+    public IReadOnlyList<Interval> GetIntervals()
+    {
+        return new BitArray(new[] { Value })
+            .Cast<bool>()
+            .Select((b, i) => (b, i))
+            .Where(t => t.b)
+            .Select(t => new Interval(t.i))
+            .OrderBy(i => i)
+            .ToImmutableList();
+    }
 
     public Interval GetInterval(Degree degree)
     {
-        AssertDegree(degree);
-        return Intervals[degree - 1];
+        var intervals = GetIntervals();
+        AssertDegree(degree, intervals);
+        return intervals[degree - 1];
     }
     
     public bool HasDegree(Degree degree)
     {
-        return degree <= Intervals.Count;
+        return degree <= GetIntervals().Count;
     }
 
     public Scale Transform(Degree degree)
     {
-        AssertDegree(degree);
-        var intervals = Intervals;
+        var intervals = GetIntervals();
+        AssertDegree(degree, intervals);
 
         var newRoot = intervals[degree - 1];
 
         return FromEnumerable(
             intervals.Select(i => new Interval(
-                Math.Modulo(i - newRoot, intervals.Max()))));
+                Math.Modulo(i - newRoot, Note.TotalNotes))));
     }
 
-    private void AssertDegree(Degree degree)
+    private static void AssertDegree(Degree degree, IReadOnlyList<Interval> intervals)
     {
-        if (!HasDegree(degree))
+        if (degree > intervals.Count)
             throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
     }
     
     public IReadOnlyList<Interval> GetChord(Degree degree, Chord chord)
     {
-        AssertDegree(degree);
+        var intervals = GetIntervals();
+        AssertDegree(degree, intervals);
         
         if (!chord.Degrees.All(HasDegree)) 
             throw new ArgumentOutOfRangeException(nameof(chord), chord, null);
@@ -62,7 +67,7 @@ public readonly record struct Scale : IComparable<Scale>
 
     public Scale Normalize()
     {
-        return FromEnumerable(Intervals.Select(i => i.Normalize()).Append(Interval.Zero));
+        return FromEnumerable(GetIntervals().Select(i => i.Normalize()).Append(Interval.Zero));
     }
 
     public static Scale FromEnumerable(IEnumerable<Interval> intervals)
