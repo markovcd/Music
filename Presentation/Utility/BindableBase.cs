@@ -87,6 +87,35 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
   }
 
+  protected IDisposable ListenForChange<TProperty>(Expression<Func<TViewModel, TProperty>> propertyExpression, Action callback)
+  {
+    var propertyInfo = GetPropertyInfo(propertyExpression);
+
+    void Handler(object? sender, PropertyChangedEventArgs e)
+    {
+      if (e.PropertyName == propertyInfo.Name) callback();
+    }
+
+    void Unsubscribe() => PropertyChanged -= Handler;
+
+    return new DisposableAction(Unsubscribe);
+  }
+
+  private sealed class DisposableAction : IDisposable
+  {
+    private readonly Action action;
+    
+    public DisposableAction(Action action)
+    {
+      this.action = action;
+    }
+
+    public void Dispose()
+    {
+      action();
+    }
+  }
+
   private sealed class Bindable<T> : IBindable<T>
   {
     private readonly string propertyName;
