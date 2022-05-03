@@ -9,7 +9,7 @@ using Presentation.Utility;
 
 namespace Presentation.Fretboard;
 
-public class FretboardViewModel : BindableBase<FretboardViewModel>
+public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
 {
   private const int DefaultFretCount = 24;
   

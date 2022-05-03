@@ -27,7 +27,7 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
   private object CreateBindableProperty(string propertyName, IEnumerable<string> coupledPropertyNames, Type propertyType)
   {
     var bindableType = typeof(BindableBase<>.Bindable<>).MakeGenericType(typeof(TViewModel), propertyType);
-    var constructor = bindableType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)[0];
+    var constructor = bindableType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
     var onPropertyChanged = OnPropertyChanged;
     
     return constructor.Invoke(new object[] { propertyName, onPropertyChanged, coupledPropertyNames })
@@ -87,14 +87,20 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
   }
 
-  protected IDisposable ListenForChange<TProperty>(Expression<Func<TViewModel, TProperty>> propertyExpression, Action callback)
+  public IDisposable ListenForChange<TProperty>(
+    Expression<Func<TViewModel, IBindable<TProperty>>> propertyExpression,
+    Action<TViewModel, TProperty?> callback)
   {
     var propertyInfo = GetPropertyInfo(propertyExpression);
-
+    
     void Handler(object? sender, PropertyChangedEventArgs e)
     {
-      if (e.PropertyName == propertyInfo.Name) callback();
+      if (e.PropertyName == propertyInfo.Name) callback(
+        (TViewModel)this,
+        ((IBindable<TProperty>)propertyInfo.GetValue(this)!).Value);
     }
+
+    PropertyChanged += Handler;
 
     void Unsubscribe() => PropertyChanged -= Handler;
 

@@ -9,7 +9,7 @@ using Presentation.Utility;
 
 namespace Presentation.Fretboard;
 
-public class StringViewModel : BindableBase<StringViewModel>
+public sealed class StringViewModel : BindableBase<StringViewModel>
 {
   [CoupledWith(nameof(ZeroFret))]
   public IBindable<IEnumerable<FretViewModel>> Frets { get; init; }
@@ -32,12 +32,17 @@ public class StringViewModel : BindableBase<StringViewModel>
   {
     var frets = Enumerable.Range(0, fretCount)
       .Select(i => new Interval(i))
-      .Select(i => tuning + i)
-      .Select(FretViewModel.FromPitch)
+      .Select(i => FretViewModel.Create(tuning + i, i))
       .ToImmutableList();
 
-    frets[0].IsZero.Value = true;
+    foreach (var fret in frets)
+      fret.ListenForChange(vm => vm.IsChecked, IsCheckedChanged);
 
     Frets.Value = frets;
+  }
+
+  private void IsCheckedChanged(FretViewModel fret, bool value)
+  {
+    
   }
 }
