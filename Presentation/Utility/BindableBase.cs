@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -10,17 +13,23 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
 {
   public event PropertyChangedEventHandler? PropertyChanged;
 
-  private Bindable<TProperty> CreateBindableProperty<TProperty>(string propertyName)
+  protected BindableBase()
   {
-    return new Bindable<TProperty>(propertyName, OnPropertyChanged);
+    if (GetType() != typeof(TViewModel)) 
+      throw new InvalidOperationException("Invalid generic type argument");
   }
   
-  private object CreateBindableProperty(string propertyName, Type propertyType)
+  private Bindable<TProperty> CreateBindableProperty<TProperty>(string propertyName, IEnumerable<string> coupledPropertyNames)
+  {
+    return new Bindable<TProperty>(propertyName, OnPropertyChanged, coupledPropertyNames);
+  }
+  
+  private object CreateBindableProperty(string propertyName, IEnumerable<string> coupledPropertyNames, Type propertyType)
   {
     var bindableType = typeof(BindableBase<>.Bindable<>).MakeGenericType(typeof(TViewModel), propertyType);
     var constructor = bindableType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)[0];
     
-    return constructor.Invoke(new object[] { propertyName, OnPropertyChanged})
+    return constructor.Invoke(new object[] { propertyName, OnPropertyChanged, coupledPropertyNames })
            ?? throw new InvalidOperationException();
   }
 
@@ -32,18 +41,28 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
       if (propertyInfo.PropertyType.GetGenericTypeDefinition() != typeof(IBindable<>)) continue;
 
       var propertyType = propertyInfo.PropertyType.GetGenericArguments()[0];
-      var bindableProperty = CreateBindableProperty(propertyInfo.Name, propertyType);
+
+      var coupledPropertyNames = GetCoupledPropertyNames(propertyInfo);
+      var bindableProperty = CreateBindableProperty(propertyInfo.Name, coupledPropertyNames, propertyType);
       
       propertyInfo.SetValue(this, bindableProperty);
     }
+  }
+
+  private static IEnumerable<string> GetCoupledPropertyNames(MemberInfo memberInfo)
+  {
+    return memberInfo.GetCustomAttributes(typeof(CoupledWithAttribute))
+      .Cast<CoupledWithAttribute>()
+      .Select(c => c.PropertyName)
+      .ToImmutableList();
   }
   
   protected void RegisterProperty<TProperty>(
     Expression<Func<TViewModel, IBindable<TProperty>>> propertyExpression)
   {
     var propertyInfo = GetPropertyInfo(propertyExpression);
-
-    var bindableProperty = CreateBindableProperty<TProperty>(propertyInfo.Name);
+    var coupledPropertyNames = GetCoupledPropertyNames(propertyInfo);
+    var bindableProperty = CreateBindableProperty<TProperty>(propertyInfo.Name, coupledPropertyNames);
 
     propertyInfo.SetValue(this, bindableProperty);
   }
@@ -70,6 +89,7 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
   private sealed class Bindable<T> : IBindable<T>
   {
     private readonly string propertyName;
+    private readonly IEnumerable<string> coupledPropertyNames;
     private readonly Action<string> propertyChangedNotification;
     private T? value;
 
@@ -79,15 +99,21 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
       set => SetProperty(value);
     }
   
-    internal Bindable(string propertyName, Action<string> propertyChangedNotification)
+    internal Bindable(
+      string propertyName, 
+      Action<string> propertyChangedNotification,
+      IEnumerable<string> coupledPropertyNames)
     {
       this.propertyName = propertyName;
       this.propertyChangedNotification = propertyChangedNotification;
+      this.coupledPropertyNames = coupledPropertyNames;
     }
 
     public void NotifyChange()
     {
       propertyChangedNotification(propertyName);
+      foreach (var coupledPropertyName in coupledPropertyNames)
+        propertyChangedNotification(coupledPropertyName);
     }
 
     // ReSharper disable once ParameterHidesMember
