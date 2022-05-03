@@ -10,6 +10,5 @@ public class Vm : BindableBase<Vm>
   public Vm()
   {
     RegisterProperties();
-
   }
 }

@@ -98,12 +98,7 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
       this.value = value;
       NotifyChange();
     }
-
-    public static implicit operator T?(Bindable<T> b)
-    {
-      return b.Value;
-    }
-
+    
     public bool Equals(T? other)
     {
       return Value != null && Value.Equals(other);
@@ -132,6 +127,36 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
     public override string? ToString()
     {
       return Value?.ToString();
+    }
+
+    public static bool operator ==(Bindable<T> first, Bindable<T> second)
+    {
+      return first.Equals(second);
+    }
+    
+    public static bool operator ==(Bindable<T> first, T second)
+    {
+      return first.Equals(second);
+    }
+    
+    public static bool operator ==(T first, Bindable<T> second)
+    {
+      return second.Equals(first);
+    }
+    
+    public static bool operator !=(Bindable<T> first, Bindable<T> second)
+    {
+      return !first.Equals(second);
+    }
+    
+    public static bool operator !=(Bindable<T> first, T second)
+    {
+      return !first.Equals(second);
+    }
+    
+    public static bool operator !=(T first, Bindable<T> second)
+    {
+      return !second.Equals(first);
     }
   }
 }
