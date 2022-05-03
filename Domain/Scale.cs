@@ -53,14 +53,19 @@ public readonly record struct Scale : IComparable<Scale>
         if (degree > intervals.Count)
             throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
     }
+
+    public IReadOnlyList<Note> GetNotes(Note root)
+    {
+        return GetAbsoluteIntervals().Select(i => root + i).ToImmutableList();
+    }
     
     public IReadOnlyList<Interval> GetChord(Degree degree, Chord chord)
     {
         var intervals = GetAbsoluteIntervals();
         AssertDegree(degree, intervals);
         
-        if (!chord.Degrees.All(HasDegree)) 
-            throw new ArgumentOutOfRangeException(nameof(chord), chord, null);
+        // if (!chord.Degrees.All(HasDegree)) 
+        //     throw new ArgumentOutOfRangeException(nameof(chord), chord, null);
 
         throw new NotImplementedException();
     }

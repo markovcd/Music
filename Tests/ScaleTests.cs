@@ -41,7 +41,7 @@ public class ScaleTests
    
    [TestMethod]
    [DataRow(2741, 6, 1453)]
-   [DataRow(2741, 1, 2741)]
+   [DataRow(2137, 1, 2137)]
    [DataRow(2741, 7, 1387)]
    [DataRow(1453, 7, 1717)]
    [DataRow(1453, 7, 1717)]
