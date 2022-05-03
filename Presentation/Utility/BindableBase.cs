@@ -28,8 +28,9 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged
   {
     var bindableType = typeof(BindableBase<>.Bindable<>).MakeGenericType(typeof(TViewModel), propertyType);
     var constructor = bindableType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)[0];
+    var onPropertyChanged = OnPropertyChanged;
     
-    return constructor.Invoke(new object[] { propertyName, OnPropertyChanged, coupledPropertyNames })
+    return constructor.Invoke(new object[] { propertyName, onPropertyChanged, coupledPropertyNames })
            ?? throw new InvalidOperationException();
   }
 

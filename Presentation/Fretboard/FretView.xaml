@@ -7,5 +7,5 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance local:FretViewModel}">
   <ToggleButton IsChecked="{Binding IsChecked.Value, Mode=TwoWay}"
-                Content="{Binding Caption.Value}" />
+                Content="{Binding Caption.Value}" IsEnabled="{Binding IsZero.Value}"/>
 </UserControl>

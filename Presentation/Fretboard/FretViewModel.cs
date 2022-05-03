@@ -11,8 +11,17 @@ public class FretViewModel : BindableBase<FretViewModel>
   
   public IBindable<bool> IsChecked { get; init; }
   
+  public IBindable<bool> IsZero { get; init; }
+
   public FretViewModel()
   {
     RegisterProperties();
+    
+    Initialize("dupa");
+  }
+
+  public void Initialize(string caption)
+  {
+    Caption.Value = caption;
   }
 }

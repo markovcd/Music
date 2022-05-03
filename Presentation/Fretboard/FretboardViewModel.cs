@@ -14,6 +14,15 @@ public class FretboardViewModel : BindableBase<FretboardViewModel>
   public FretboardViewModel()
   {
     RegisterProperties();
+
+    var strings = new[]
+    {
+      new StringViewModel(),
+      new StringViewModel(),
+      new StringViewModel(),
+    };
+
+    Initialize(strings);
   }
   
   public void Initialize(IEnumerable<StringViewModel> strings)

@@ -6,7 +6,13 @@
              xmlns:local="clr-namespace:Presentation.Fretboard"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance local:StringViewModel}">
-  <ItemsControl ItemsSource="{Binding Frets}">
+  <ItemsControl ItemsSource="{Binding Frets.Value}">
+    <ItemsControl.ItemsPanel>                              
+      <ItemsPanelTemplate>
+        <UniformGrid Rows="1" />
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>   
+    
     <ItemsControl.ItemTemplate>
       <DataTemplate>
         <local:FretView/>

@@ -19,6 +19,17 @@ public class StringViewModel : BindableBase<StringViewModel>
   public StringViewModel()
   {
     RegisterProperties();
+
+    var frets = new[]
+    {
+      new FretViewModel(),
+      new FretViewModel(),
+      new FretViewModel(),
+    };
+    
+    frets[0].IsZero.Value = true;
+    
+    Initialize(frets);
   }
 
   public void Initialize(IEnumerable<FretViewModel> frets)
