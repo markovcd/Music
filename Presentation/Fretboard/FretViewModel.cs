@@ -1,12 +1,15 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 #pragma warning disable CS8618
 
+using Domain;
 using Presentation.Utility;
 
 namespace Presentation.Fretboard;
 
 public class FretViewModel : BindableBase<FretViewModel>
 {
+  private Pitch pitch;
+  
   public IBindable<string> Caption { get; init; }
   
   public IBindable<bool> IsChecked { get; init; }
@@ -16,12 +19,25 @@ public class FretViewModel : BindableBase<FretViewModel>
   public FretViewModel()
   {
     RegisterProperties();
-    
-    Initialize("dupa");
+  }
+  
+  // ReSharper disable once ParameterHidesMember
+  public void Initialize(Pitch pitch)
+  {
+    this.pitch = pitch;
+    Caption.Value = pitch.ToString();
+    ListenForChange(vm => IsChecked, IsCheckedChanged);
+  }
+  
+  internal static FretViewModel FromPitch(Pitch pitch)
+  {
+    var fret = new FretViewModel();
+    fret.Initialize(pitch);
+    return fret;
   }
 
-  public void Initialize(string caption)
+  private void IsCheckedChanged()
   {
-    Caption.Value = caption;
+    
   }
 }
