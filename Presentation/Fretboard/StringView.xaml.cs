@@ -1,8 +1,8 @@
 namespace Presentation.Fretboard;
 
-public partial class FretboardView
+public partial class StringView
 {
-  public FretboardView()
+  public StringView()
   {
     InitializeComponent();
   }

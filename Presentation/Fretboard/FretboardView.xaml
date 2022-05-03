@@ -5,23 +5,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Presentation.Fretboard"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DataContext="{d:DesignInstance local:FretboardViewModel}">
   <Grid>
-    <!-- <ItemsControl ItemsSource="{Binding MyCollection}"> -->
-    <!-- -->
-    <!--   ~1~ This panel will be used to hold the items @1@ -->
-    <!--   <ItemsControl.ItemsPanel> -->
-    <!--     <ItemsPanelTemplate> -->
-    <!--       <UniformGrid Rows="8" Columns="8" /> -->
-    <!--     </ItemsPanelTemplate> -->
-    <!--   </ItemsControl.ItemsPanel> -->
-    <!-- -->
-    <!--   ~1~ Each item will be drawn using this template @1@ -->
-    <!--   <ItemsControl.ItemTemplate> -->
-    <!--     <DataTemplate> -->
-    <!--       <Button Text="{Binding }" Style="{StaticResource MyButtonStyle}" /> -->
-    <!--     </DataTemplate> -->
-    <!--   </ItemsControl.ItemTemplate> -->
-    <!-- </ItemsControl> -->
+    <ItemsControl ItemsSource="{Binding Strings}">
+    
+      <!-- This panel will be used to hold the items -->
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <UniformGrid Rows="8" Columns="8" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+    
+      <!-- Each item will be drawn using this template -->
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <local:StringView/>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
   </Grid>
 </UserControl>

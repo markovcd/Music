@@ -1,14 +1,23 @@
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+#pragma warning disable CS8618
+
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Collections.Immutable;
+using Presentation.Utility;
 
 namespace Presentation.Fretboard;
 
-public class NoteViewModel
+public class FretboardViewModel : BindableBase<FretboardViewModel>
 {
-  
-}
+  public IBindable<IEnumerable<StringViewModel>> Strings { get; init; }
 
-public class FretboardViewModel
-{
-  public IEnumerable<NoteViewModel> Notes { get; }
+  public FretboardViewModel()
+  {
+    RegisterProperties();
+  }
+  
+  public void Initialize(IEnumerable<StringViewModel> strings)
+  {
+    Strings.Value = strings.ToImmutableList();
+  }
 }
