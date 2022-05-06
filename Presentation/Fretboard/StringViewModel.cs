@@ -36,12 +36,12 @@ public sealed class StringViewModel : BindableBase<StringViewModel>
       .ToImmutableList();
 
     foreach (var fret in frets)
-      fret.ListenForChange(vm => vm.IsChecked, IsCheckedChanged);
+      fret.IsChecked.ListenForChange(IsCheckedChanged);
 
     Frets.Value = frets;
   }
 
-  private void IsCheckedChanged(FretViewModel fret, bool value)
+  private void IsCheckedChanged(IBindable<bool> property)
   {
     
   }
