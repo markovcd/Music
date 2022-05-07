@@ -1,0 +1,3 @@
+[submodule "BadgerMvvm"]
+	path = BadgerMvvm
+	url = https://github.com/markovcd/BadgerMvvm
