@@ -12,7 +12,7 @@ namespace Presentation.Utility;
 public abstract class BindableBase<TViewModel> : INotifyPropertyChanged, INotifyDataErrorInfo
   where TViewModel : BindableBase<TViewModel>
 {
-  private readonly List<IBindable> registeredProperties = new();
+  private readonly ThreadSafeList<IBindable> registeredProperties = new();
   
   public event PropertyChangedEventHandler? PropertyChanged;
   
@@ -20,7 +20,7 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged, INotify
 
   public bool HasErrors => RegisteredProperties.Any(p => p.HasErrors);
 
-  protected IReadOnlyList<IBindable> RegisteredProperties => registeredProperties;
+  protected IEnumerable<IBindable> RegisteredProperties => registeredProperties;
 
   protected BindableBase()
   {
@@ -148,11 +148,11 @@ public abstract class BindableBase<TViewModel> : INotifyPropertyChanged, INotify
     private readonly Action<string> propertyChangedNotification;
     private readonly Action<string> errorsChangedNotification;
     private T? value;
-    private readonly List<Action<IBindable<T>>> changedCallbacks = new();
-    private readonly List<Action<IBindable<T>>> errorCallbacks = new();
-    private readonly List<Func<IBindable<T>, ValidationResult>> validationRules = new();
+    private readonly ThreadSafeList<Action<IBindable<T>>> changedCallbacks = new();
+    private readonly ThreadSafeList<Action<IBindable<T>>> errorCallbacks = new();
+    private readonly ThreadSafeList<Func<IBindable<T>, ValidationResult>> validationRules = new();
 
-    private readonly List<string> errors = new();
+    private readonly ThreadSafeList<string> errors = new();
 
     public string Name { get; }
 
