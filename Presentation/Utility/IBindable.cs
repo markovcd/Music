@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Presentation.Utility;
 
-public interface IBindable
+public interface IBindable : INotifyPropertyChanged, INotifyDataErrorInfo
 {
   string Name { get; }
-  
-  bool HasErrors { get; }
   
   IReadOnlyList<string> Errors { get; }
   
   void AddError(string message);
   
   void ClearErrors();
+
+  void Validate();
 }
 
 public interface IBindable<T> : IBindable, IEquatable<T>, IEquatable<IBindable<T>>
@@ -25,4 +26,6 @@ public interface IBindable<T> : IBindable, IEquatable<T>, IEquatable<IBindable<T
   IDisposable ListenForErrors(Action<IBindable<T>> callback);
 
   IDisposable AddValidationRule(Func<IBindable<T>, ValidationResult> rule);
+  
+  IDisposable AddValidationRule(IValidationRule<T> rule);
 }
