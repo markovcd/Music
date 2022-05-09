@@ -2,8 +2,8 @@
 // ReSharper disable ParameterHidesMember
 #pragma warning disable CS8618
 
+using BadgerMvvm.Core;
 using Domain;
-using Presentation.Utility;
 
 namespace Presentation.Fretboard;
 

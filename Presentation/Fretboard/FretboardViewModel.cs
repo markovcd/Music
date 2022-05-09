@@ -4,8 +4,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using BadgerMvvm.Core;
 using Domain;
-using Presentation.Utility;
 
 namespace Presentation.Fretboard;
 
