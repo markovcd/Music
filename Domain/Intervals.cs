@@ -76,7 +76,6 @@ public readonly record struct Intervals : IEnumerable<Interval>, IComparable<Int
     return new Intervals(this ^ (this & intervals));
   }
 
-  
   public int CompareTo(Intervals other)
   {
     return Value.CompareTo(other.Value);
@@ -142,9 +141,19 @@ public readonly record struct Intervals : IEnumerable<Interval>, IComparable<Int
   {
     return first.AddIntervals(second);
   }
+  
+  public static Intervals operator +(Intervals first, Interval second)
+  {
+    return first.AddIntervals(Create(new[] { second }));
+  }
     
   public static Intervals operator -(Intervals first, Intervals second)
   {
     return first.RemoveIntervals(second);
+  }
+  
+  public static Intervals operator -(Intervals first, Interval second)
+  {
+    return first.RemoveIntervals(Create(new[] { second }));
   }
 }
