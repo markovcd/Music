@@ -19,48 +19,54 @@ public readonly record struct Scale
     }
     
     public Intervals Intervals { get; }
-
-
-    public Scale Transform(ScaleDegree scaleDegree)
+    
+    public Scale Transform(Degree degree)
     {
-        AssertDegree(scaleDegree);
+        AssertDegree(degree);
     
         var intervals = Intervals.ToList();
-        var newRoot = intervals[scaleDegree - 1];
+        var newRoot = intervals[degree - 1];
         
         return new Scale(Intervals.Create(
             intervals.Select(i => new Interval(
                 Math.Modulo(i - newRoot, Note.TotalNotes)))));
     }
     
-    private void AssertDegree(ScaleDegree scaleDegree)
+    private void AssertDegree(Degree degree)
     {
-        if (scaleDegree > Intervals.Count())
-            throw new ArgumentOutOfRangeException(nameof(scaleDegree), scaleDegree, null);
+        if (degree > Intervals.Count())
+            throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
     }
     
-    public bool HasDegree(ScaleDegree scaleDegree)
+    public bool HasDegree(Degree degree)
     {
-        return scaleDegree <= Intervals.Count();
+        return degree <= Intervals.Count();
     }
     
-    public Chord GetChord(ScaleDegree root, ScaleDegrees template)
+    public Chord GetChord(Degree root, Degrees template)
     {
         if (!template.All(HasDegree)) 
             throw new ArgumentOutOfRangeException(nameof(template), template, null);
 
         var transformed = Transform(root);
 
-        return new Chord(template, Intervals.Create(template.Select(d => transformed.GetInterval(d))));
+        return new Chord(root, template, Intervals.Create(template.Select(d => transformed.GetInterval(d))));
+    }
+
+    public IEnumerable<Chord> GetChords(Degrees template)
+    {
+        var count = Intervals.Count();
+        var local = this;
+        return Enumerable.Range(1, count).Select(i => local.GetChord((byte)i, template));
     }
     
-    public Interval GetInterval(ScaleDegree scaleDegree)
+    public Interval GetInterval(Degree degree)
     {
         var intervals = Intervals.ToImmutableArray();
     
-        if (scaleDegree > intervals.Length)
-            throw new ArgumentOutOfRangeException(nameof(scaleDegree), scaleDegree, null);
+        if (degree > intervals.Length)
+            throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
     
-        return intervals[scaleDegree - 1];
+        return intervals[degree - 1];
     }
 }

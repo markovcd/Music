@@ -18,7 +18,7 @@ public class ScaleTests
   [TestCase(2275, 2, 3185)]
   public void Transform_TransformsScaleToGivenDegree(int scale, byte degreeIndex, int expectedScale)
   {
-    new Scale(new Intervals(scale)).Transform(new ScaleDegree(degreeIndex))
+    new Scale(new Intervals(scale)).Transform(new Degree(degreeIndex))
       .Should()
       .BeEquivalentTo(new Scale(new Intervals(expectedScale)));
   }
