@@ -40,12 +40,12 @@ public readonly record struct Degree : IComparable<Degree>
         return second >= first;
     }
 
-    public static implicit operator int(Degree octave)
+    public static implicit operator int(Degree degree)
     {
-        return octave.Value;
+        return degree.Value;
     }
 
-    public static explicit operator Degree(int i)
+    public static implicit operator Degree(int i)
     {
         return new Degree(i);
     }

@@ -1,57 +1,57 @@
 using Domain;
 using FluentAssertions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Tests;
 
-[TestClass]
+[TestFixture]
 public class PitchTests
 {
-   [TestMethod]
-   [DataRow(0, 1, 1)]
-   [DataRow(1, 1, 13)]
-   [DataRow(-1, 11, -1)]
-   [DataRow(2, 2, 26)]
-   [DataRow(0, 0, 0)]
-   [DataRow(0, 11, 11)]
-   [DataRow(1, 0, 12)]
+   [Test]
+   [TestCase(0, 1, 1)]
+   [TestCase(1, 1, 13)]
+   [TestCase(-1, 11, -1)]
+   [TestCase(2, 2, 26)]
+   [TestCase(0, 0, 0)]
+   [TestCase(0, 11, 11)]
+   [TestCase(1, 0, 12)]
    public void Index_ReturnsProperIndex(int octaveIndex, int noteIndex, int pitchIndex)
    {
       var pitch = new Pitch(new Octave(octaveIndex), new Note(noteIndex));
       pitch.Index.Should().Be(pitchIndex);
    }
    
-   [TestMethod]
-   [DataRow(0, 1, 17.323914436054505)]
-   [DataRow(1, 1, 34.64782887210901)]
-   [DataRow(-1, 11, 15.433853164253883)]
-   [DataRow(2, 2, 73.41619197935188)]
-   [DataRow(0, 0, 16.351597831287414)]
-   [DataRow(0, 11, 30.86770632850775)]
-   [DataRow(1, 0, 32.70319566257483)]
-   [DataRow(4, 9, 440)]
-   [DataRow(4, 5, 349.2282314330039)]
-   [DataRow(3, 9, 220)]
+   [Test]
+   [TestCase(0, 1, 17.323914436054505)]
+   [TestCase(1, 1, 34.64782887210901)]
+   [TestCase(-1, 11, 15.433853164253883)]
+   [TestCase(2, 2, 73.41619197935188)]
+   [TestCase(0, 0, 16.351597831287414)]
+   [TestCase(0, 11, 30.86770632850775)]
+   [TestCase(1, 0, 32.70319566257483)]
+   [TestCase(4, 9, 440)]
+   [TestCase(4, 5, 349.2282314330039)]
+   [TestCase(3, 9, 220)]
    public void Frequency_ReturnsProperFrequency(int octaveIndex, int noteIndex, double frequency)
    {
       var pitch = new Pitch(new Octave(octaveIndex), new Note(noteIndex));
       pitch.Frequency.Should().Be(new Frequency(frequency));
    }
    
-   [TestMethod]
-   [DataRow(17.323914436054505, 0, 1)]
-   [DataRow(17.32, 0, 1)]
-   [DataRow(34.64782887210901, 1, 1)]
-   [DataRow(34.648, 1, 1)]
-   [DataRow(15.433853164253883, -1, 11)]
-   [DataRow(73.41619197935188, 2, 2)]
-   [DataRow(16.351597831287414, 0, 0)]
-   [DataRow(16.4, 0, 0)]
-   [DataRow(30.86770632850775, 0, 11)]
-   [DataRow(32.70319566257483, 1, 0)]
-   [DataRow(440, 4, 9)]
-   [DataRow(349.2282314330039, 4, 5)]
-   [DataRow(220, 3, 9)]
+   [Test]
+   [TestCase(17.323914436054505, 0, 1)]
+   [TestCase(17.32, 0, 1)]
+   [TestCase(34.64782887210901, 1, 1)]
+   [TestCase(34.648, 1, 1)]
+   [TestCase(15.433853164253883, -1, 11)]
+   [TestCase(73.41619197935188, 2, 2)]
+   [TestCase(16.351597831287414, 0, 0)]
+   [TestCase(16.4, 0, 0)]
+   [TestCase(30.86770632850775, 0, 11)]
+   [TestCase(32.70319566257483, 1, 0)]
+   [TestCase(440, 4, 9)]
+   [TestCase(349.2282314330039, 4, 5)]
+   [TestCase(220, 3, 9)]
    public void FromFrequency_ReturnsProperPitch(double frequency, int octaveIndex, int noteIndex)
    {
       var pitch = Pitch.FromFrequency(new Frequency(frequency));
@@ -59,11 +59,11 @@ public class PitchTests
       pitch.Note.Should().Be(new Note(noteIndex));
    }
 
-   [TestMethod]
-   [DataRow(0, 0, 0)]
-   [DataRow(0, 1, 1)]
-   [DataRow(1, 1111, 1112)]
-   [DataRow(1, -5, -4)]
+   [Test]
+   [TestCase(0, 0, 0)]
+   [TestCase(0, 1, 1)]
+   [TestCase(1, 1111, 1112)]
+   [TestCase(1, -5, -4)]
    public void Transpose_TransposesPitch(int firstIndex, int transposeIndex, int secondIndex)
    {
       var firstPitch = Pitch.FromIndex(firstIndex);
@@ -71,16 +71,16 @@ public class PitchTests
       secondPitch.Should().Be(Pitch.FromIndex(secondIndex));
    }
    
-   [TestMethod]
-   [DataRow(-2, -1, 10)]
-   [DataRow(-1, -1, 11)]
-   [DataRow(0, 0, 0)]
-   [DataRow(1, 0, 1)]
-   [DataRow(2, 0, 2)]
-   [DataRow(3, 0, 3)]
-   [DataRow(11, 0, 11)]
-   [DataRow(12, 1, 0)]
-   [DataRow(171, 14, 3)]
+   [Test]
+   [TestCase(-2, -1, 10)]
+   [TestCase(-1, -1, 11)]
+   [TestCase(0, 0, 0)]
+   [TestCase(1, 0, 1)]
+   [TestCase(2, 0, 2)]
+   [TestCase(3, 0, 3)]
+   [TestCase(11, 0, 11)]
+   [TestCase(12, 1, 0)]
+   [TestCase(171, 14, 3)]
    public void FromIndex_ConvertsFromOctaveAndNote(int index, int octave, int note)
    {
       var pitch = Pitch.FromIndex(index);

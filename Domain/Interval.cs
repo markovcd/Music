@@ -51,7 +51,7 @@ public readonly record struct Interval : IComparable<Interval>
         return interval.Value;
     }
     
-    public static explicit operator Interval(int i)
+    public static implicit operator Interval(int i)
     {
         return new Interval(i);
     }

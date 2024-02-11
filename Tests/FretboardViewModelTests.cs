@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using Presentation.Fretboard;
 
 namespace Tests;
 
-[TestClass]
+[TestFixture]
 public class FretboardViewModelTests
 {
-    [TestMethod]
+    [Test]
     public void XX()
     {
         var x = new FretViewModel();
