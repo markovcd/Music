@@ -46,31 +46,6 @@ public readonly record struct Intervals : IEnumerable<Interval>, IComparable<Int
     return GetIntervals().Contains(interval);
   }
   
-  public bool HasDegree(Degree degree)
-  {
-    return degree <= GetIntervals().Count;
-  }
-
-  public Interval GetInterval(Degree degree)
-  {
-    var intervals = GetIntervals();
-    
-    if (degree > intervals.Count)
-      throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
-    
-    return intervals[degree - 1];
-  }
-
-  public Intervals GetIntervals(Degrees degrees)
-  {
-    var intervals = GetIntervals();
-
-    if (degrees.Max() > intervals.Count)
-      throw new ArgumentOutOfRangeException(nameof(degrees), degrees, null);
-
-    return Create(degrees.Select(d => intervals[d - 1]));
-  }
-  
   public Intervals Normalize()
   {
     return Create(GetIntervals().Select(i => i.Normalize()));
@@ -110,35 +85,6 @@ public readonly record struct Intervals : IEnumerable<Interval>, IComparable<Int
       .Select(t => new Interval(t.i))
       .OrderBy(i => i)
       .ToImmutableList();
-  }
-  
-  public Intervals Transform(Degree degree)
-  {
-    AssertDegree(degree);
-    
-    var intervals = this.ToList();
-    var newRoot = intervals[degree - 1];
-        
-    return Create(
-      intervals.Select(i => new Interval(
-        Math.Modulo(i - newRoot, Note.TotalNotes))));
-  }
-  
-  public Chord GetChord(Degree root, Degrees template)
-  {
-    if (!template.All(HasDegree)) 
-      throw new ArgumentOutOfRangeException(nameof(template), template, null);
-
-    var transformed = Transform(root);
-    var chordSteps = template.Select(d => new ChordStep(d, transformed.GetInterval(d)));
-
-    return new Chord(chordSteps);
-  }
-  
-  private void AssertDegree(Degree degree)
-  {
-    if (degree > this.Count())
-      throw new ArgumentOutOfRangeException(nameof(degree), degree, null);
   }
   
   public override string ToString()

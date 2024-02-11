@@ -1,6 +1,17 @@
-﻿namespace Domain;
+﻿using System.Collections.Immutable;
 
-public readonly ref struct Chord(IEnumerable<ChordStep> chordSteps)
+namespace Domain;
+
+public readonly record struct Chord(ScaleDegrees ScaleDegrees, Intervals Intervals)
 {
-    public ReadOnlySpan<ChordStep> Steps { get; } = chordSteps.ToArray();
+    public Interval GetInterval(ScaleDegree scaleDegree)
+    {
+        var index = ScaleDegrees.Select((d, i) => (d, i)).Single(t => t.d == scaleDegree).i;
+        var intervals = Intervals.ToImmutableArray();
+
+        if (index > intervals.Length)
+            throw new ArgumentOutOfRangeException(nameof(scaleDegree), scaleDegree, null);
+
+        return intervals[index];
+    }
 }
