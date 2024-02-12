@@ -28,7 +28,7 @@ public sealed class FretViewModel : BindableBase<FretViewModel>
     this.pitch = pitch;
     this.interval = interval;
     Caption.Value = pitch.ToString();
-    IsZero.Value = interval == Interval.Zero;
+    IsZero.Value = interval == Interval.Tonic;
   }
   
   internal static FretViewModel Create(Pitch pitch, Interval interval)

@@ -9,8 +9,10 @@ public readonly record struct Degree : IComparable<Degree>
     public static Degree Fifth => 5;
     public static Degree Sixth => 6;
     public static Degree Seventh => 7;
-
-
+    public static Degree Ninth => 2;
+    public static Degree Eleventh => 4;
+    public static Degree Thirteenth => 6;
+    
     public Degree(byte value)
     {
         if (value < 1) throw new ArgumentOutOfRangeException(nameof(value), value, null);

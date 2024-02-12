@@ -2,30 +2,7 @@
 
 namespace Domain;
 
-public enum TriadType
-{
-    None,
-    Minor,
-    Major,
-    Diminished,
-    Augmented
-}
-
-public enum SeventhType
-{
-    None,
-    Minor,
-    Major,
-    MinorMajor,
-    Dominant,
-    HalfDiminished,
-    Diminished,
-    DiminishedMajor,
-    Augmented,
-    AugmentedSeventh
-}
-
-public readonly record struct Chord(Degree Root, Degrees Degrees, Intervals Intervals)
+public readonly record struct Chord(Degrees Degrees, Intervals Intervals)
 {
     public Interval GetInterval(Degree degree)
     {
@@ -43,31 +20,22 @@ public readonly record struct Chord(Degree Root, Degrees Degrees, Intervals Inte
         var local = this;
         return degrees.All(d => local.Degrees.Contains(d));
     }
-
     
-    public bool ContainsSeventh => Contains(ChordTemplates.Seventh);
-    
-    public bool IsTriad => Degrees == ChordTemplates.Triad;
-    
-    public bool IsSeventh => Degrees == ChordTemplates.Seventh;
-
     public TriadType TriadType
     {
         get
         {
             if (!Contains(ChordTemplates.Triad)) return TriadType.None;
             
-            int third = GetInterval(3);
-            int fifth = GetInterval(5);
+            var third = GetInterval(Degree.Third);
+            var fifth = GetInterval(Degree.Fifth);
             
-            return (third, fifth) switch
-            {
-                (3, 7) => TriadType.Minor,
-                (4, 7) => TriadType.Major,
-                (3, 6) => TriadType.Diminished,
-                (4, 8) => TriadType.Augmented,
-                _ => TriadType.None
-            };
+            if ((third, fifth) == (Interval.MinorThird, Interval.Fifth)) return TriadType.Minor;
+            if ((third, fifth) == (Interval.MajorThird, Interval.Fifth)) return TriadType.Major;
+            if ((third, fifth) == (Interval.MinorThird, Interval.DiminishedFifth)) return TriadType.Diminished;
+            if ((third, fifth) == (Interval.MajorThird, Interval.AugmentedFifth)) return TriadType.Augmented;
+
+            return TriadType.None;
         }
     }
 
@@ -77,16 +45,19 @@ public readonly record struct Chord(Degree Root, Degrees Degrees, Intervals Inte
         {
             if (!Contains(ChordTemplates.Seventh)) return SeventhType.None;
             var triadType = TriadType;
-            var seventh = GetInterval(7);
+            var seventh = GetInterval(Degree.Seventh);
             
-            return (TriadType, seventh) switch
-            {
-                (TriadType.Minor, 7) => SeventhType.Minor,
-                (TriadType.Minor, 7) => TriadType.Major,
-                (TriadType.Minor, 6) => TriadType.Diminished,
-                (TriadType.Minor, 8) => TriadType.Augmented,
-                _ => TriadType.None
-            };
+            if ((triadType, seventh) == (TriadType.Minor, Interval.MinorSeventh)) return SeventhType.Minor;
+            if ((triadType, seventh) == (TriadType.Major, Interval.MajorSeventh)) return SeventhType.Major;
+            if ((triadType, seventh) == (TriadType.Minor, Interval.MajorSeventh)) return SeventhType.MinorMajor;
+            if ((triadType, seventh) == (TriadType.Major, Interval.MinorSeventh)) return SeventhType.Dominant;
+            if ((triadType, seventh) == (TriadType.Diminished, Interval.MinorSeventh)) return SeventhType.HalfDiminished;
+            if ((triadType, seventh) == (TriadType.Diminished, Interval.DiminishedSeventh)) return SeventhType.Diminished;
+            if ((triadType, seventh) == (TriadType.Diminished, Interval.MajorSeventh)) return SeventhType.DiminishedMajor;
+            if ((triadType, seventh) == (TriadType.Augmented, Interval.MinorSeventh)) return SeventhType.Augmented;
+            if ((triadType, seventh) == (TriadType.Augmented, Interval.MajorSeventh)) return SeventhType.AugmentedMajor;
+            
+            return SeventhType.None;
         }
     }
 }

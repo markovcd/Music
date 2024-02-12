@@ -50,7 +50,7 @@ public readonly record struct Scale
 
         var transformed = Transform(root);
 
-        return new Chord(root, template, Intervals.Create(template.Select(d => transformed.GetInterval(d))));
+        return new Chord(template, Intervals.Create(template.Select(d => transformed.GetInterval(d))));
     }
 
     public IEnumerable<Chord> GetChords(Degrees template)
