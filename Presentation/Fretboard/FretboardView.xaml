@@ -12,6 +12,17 @@
                  FontSize="24"/>
 
       <WrapPanel Margin="0,8,0,0">
+        <TextBlock Text="Tuning:"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"/>
+        <ComboBox ItemsSource="{Binding Tunings}"
+                  SelectedItem="{Binding SelectedTuning.Value}"
+                  DisplayMemberPath="Label"
+                  Width="260"
+                  Margin="0,0,8,0"/>
+      </WrapPanel>
+
+      <WrapPanel Margin="0,8,0,0">
         <CheckBox Content="Show scale"
                   IsChecked="{Binding ShowScale.Value}"
                   VerticalAlignment="Center"

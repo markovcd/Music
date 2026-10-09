@@ -620,4 +620,103 @@ public class FretboardViewModelTests
 
         board.ChordNames.Value.Should().Be("Gb");
     }
+
+    [Test]
+    public void New_UsesStandardTuning()
+    {
+        var board = new FretboardViewModel();
+
+        board.Tunings.Should().BeSameAs(TuningTemplates.All);
+        board.SelectedTuning.Value.Should().BeSameAs(TuningTemplates.Standard);
+    }
+
+    [Test]
+    public void ChoosingATuning_ReplacesTheStrings()
+    {
+        var board = new FretboardViewModel();
+
+        board.SelectedTuning.Value = TuningTemplates.DropD;
+
+        board.Strings.Value!.Select(s => s.ZeroFret.Caption.Value).Should().Equal("E4", "B3", "G3", "D3", "A2", "D2");
+        board.Strings.Value!.Should().OnlyContain(s => s.Frets.Value!.Count() == 24);
+    }
+
+    [Test]
+    public void ChoosingATuning_WithAnotherNumberOfStrings_ChangesTheNumberOfStrings()
+    {
+        var board = new FretboardViewModel();
+
+        board.SelectedTuning.Value = TuningTemplates.Bass;
+        board.Strings.Value!.Should().HaveCount(4);
+
+        board.SelectedTuning.Value = TuningTemplates.Standard;
+        board.Strings.Value!.Should().HaveCount(6);
+    }
+
+    [Test]
+    public void ChoosingATuning_UnchecksTheFrets()
+    {
+        var board = new FretboardViewModel();
+        Check(board, "x 3 2 0 1 0");
+
+        board.SelectedTuning.Value = TuningTemplates.DropD;
+
+        AllFrets(board).Should().OnlyContain(f => !f.IsChecked.Value);
+        board.ChordNames.Value.Should().BeEmpty();
+        board.TransposeUp.CanExecute(null).Should().BeFalse();
+    }
+
+    [Test]
+    public void ChoosingATuning_NamesChordsAfterTheNewStrings()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedTuning.Value = TuningTemplates.OpenG;
+
+        foreach (var (stringIndex, _) in board.Strings.Value!.Select((s, i) => (i, s)))
+            Fret(board, stringIndex, 0).IsChecked.Value = true;
+
+        board.ChordNames.Value.Should().StartWith("G");
+    }
+
+    [Test]
+    public void ChoosingATuning_FindsShapesForTheNewStrings()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "D";
+        var standardShapes = board.Shapes.Value!.ToList();
+
+        board.SelectedTuning.Value = TuningTemplates.OpenD;
+
+        board.Shapes.Value.Should().Contain("0 0 0 0 0 0");
+        board.Shapes.Value.Should().NotEqual(standardShapes);
+        board.SelectedShape.Value.Should().BeNull();
+    }
+
+    [Test]
+    public void ChoosingATuning_KeepsShowingTheScale()
+    {
+        var board = new FretboardViewModel();
+        ShowScale(board, "C", "Major");
+
+        board.SelectedTuning.Value = TuningTemplates.Bass;
+
+        AllFrets(board).Should().HaveCount(4 * 24);
+        AllFrets(board).Where(f => f.IsInScale.Value).Should().NotBeEmpty();
+        AllFrets(board).Where(f => f.IsScaleRoot.Value).Should().OnlyContain(f => f.Pitch.Note == Note.Parse("C"));
+        board.ScaleNotes.Value.Should().Be("C D E F G A B");
+    }
+
+    [Test]
+    public void ChoosingATuning_ThenShape_ChecksFretsOfTheNewStrings()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedTuning.Value = TuningTemplates.Ukulele;
+        board.ChordQuery.Value = "C";
+
+        board.Shapes.Value.Should().NotBeEmpty();
+        board.SelectedShape.Value = board.Shapes.Value!.First();
+
+        board.ChordNames.Value.Should().StartWith("C");
+        Diagram(board).Split(' ').Should().HaveCount(4);
+    }
 }

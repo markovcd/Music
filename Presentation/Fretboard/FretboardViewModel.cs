@@ -40,6 +40,12 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
   /// </summary>
   public IBindable<string> ChordNames { get; init; }
 
+  /// <summary>The tunings to choose from.</summary>
+  public IReadOnlyList<NamedTuning> Tunings => TuningTemplates.All;
+
+  /// <summary>The tuning of the strings. Choosing another one replaces the strings and unchecks every fret.</summary>
+  public IBindable<NamedTuning> SelectedTuning { get; init; }
+
   /// <summary>The roots to choose from for the scale.</summary>
   public IReadOnlyList<string> Roots => RootNames;
 
@@ -102,18 +108,25 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
 
   private void SetUp()
   {
+    SelectedTuning.Value = TuningTemplates.Standard;
     SelectedRoot.Value = RootNames[0];
     SelectedScale.Value = Scales[0];
     ShowScale.Value = false;
     ChordQuery.Value = string.Empty;
 
+    SelectedTuning.ListenForChange(_ => ApplyInstrument());
     ShowScale.ListenForChange(_ => UpdateScale());
     SelectedRoot.ListenForChange(_ => UpdateScale());
     SelectedScale.ListenForChange(_ => UpdateScale());
     ChordQuery.ListenForChange(_ => UpdateShapes());
     SelectedShape.ListenForChange(_ => ApplySelectedShape());
 
-    Initialize(DomainFretboard.StandardTuning);
+    ApplyInstrument();
+  }
+
+  private void ApplyInstrument()
+  {
+    Initialize(SelectedTuning.Value?.Pitches ?? TuningTemplates.Standard.Pitches);
   }
 
   public void Initialize(IEnumerable<Pitch> stringTunings, int fretCount = DefaultFretCount)
