@@ -43,23 +43,58 @@ public readonly record struct Scale
         return degree <= Intervals.Count();
     }
     
-    public Chord GetChord(Degree root, Degrees template)
+    /// <summary>
+    /// The notes of the chord stacked on <paramref name="chordRoot"/>, in the order of <paramref name="template"/>,
+    /// when the scale starts on <paramref name="scaleRoot"/>. A template degree counts from the chord root,
+    /// so a triad on the second degree uses the scale's second, fourth and sixth degrees.
+    /// </summary>
+    public IReadOnlyList<Note> GetChordNotes(Note scaleRoot, Degree chordRoot, IReadOnlyList<Degree> template)
     {
-        if (!template.All(HasDegree)) 
+        AssertDegree(chordRoot);
+
+        if (template.Count == 0)
+            throw new ArgumentException("A chord needs at least one degree.", nameof(template));
+
+        if (!template.All(HasDegree))
             throw new ArgumentOutOfRangeException(nameof(template), template, null);
 
-        var transformed = Transform(root);
-
-        return new Chord(template, Intervals.Create(template.Select(d => transformed.GetInterval(d))));
-    }
-
-    public IEnumerable<Chord> GetChords(Degrees template)
-    {
-        var count = Intervals.Count();
         var local = this;
-        return Enumerable.Range(1, count).Select(i => local.GetChord((byte)i, template));
+        var count = Intervals.Count();
+
+        return template
+            .Select(d => local.GetInterval(new Degree((byte)((chordRoot - 1 + d - 1) % count + 1))))
+            .Select(i => scaleRoot + i)
+            .ToList();
     }
-    
+
+    /// <summary>
+    /// The name of the chord stacked on <paramref name="chordRoot"/>, or null if its notes
+    /// do not form a chord known to <see cref="ChordQualities"/> with the chord root as the root.
+    /// </summary>
+    public ChordName? GetChordName(Note scaleRoot, Degree chordRoot, IReadOnlyList<Degree> template)
+    {
+        var notes = GetChordNotes(scaleRoot, chordRoot, template);
+
+        return ChordNamer.Detect(notes, notes[0])
+            .Where(name => name.Bass is null)
+            .Select(name => (ChordName?)name)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The names of the chords stacked on every degree of the scale, in degree order,
+    /// for example Am7, Bm7b5, Cmaj7, Dm7, Em7, Fmaj7, G7 for the seventh chords of A minor.
+    /// A chord that is not a known kind of chord is null.
+    /// </summary>
+    public IReadOnlyList<ChordName?> GetChordNames(Note scaleRoot, IReadOnlyList<Degree> template)
+    {
+        var local = this;
+
+        return Enumerable.Range(1, Intervals.Count())
+            .Select(i => local.GetChordName(scaleRoot, new Degree((byte)i), template))
+            .ToList();
+    }
+
     public Interval GetInterval(Degree degree)
     {
         var intervals = Intervals.ToImmutableArray();

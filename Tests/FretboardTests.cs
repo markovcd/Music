@@ -404,7 +404,7 @@ public class FretboardTests
     {
         Names(Shape("x x 0 2 3 3")).Should().Equal("Dsus4", "Gsus2/D");
         Names(Shape("x 0 2 0 1 0")).Should().Equal("Am7", "C6/A");
-        Names(Shape("x x 1 2 1 2")).Should().Equal("D#dim7", "Cdim7/D#", "F#dim7/D#", "Adim7/D#");
+        Names(Shape("x x 1 2 1 2")).Should().Equal("Ebdim7", "Cdim7/Eb", "F#dim7/Eb", "Adim7/Eb");
     }
 
     [Test]

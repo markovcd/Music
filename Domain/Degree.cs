@@ -1,5 +1,9 @@
 namespace Domain;
 
+/// <summary>
+/// A position in a scale, counted from 1. Degrees above the octave are the same degree again:
+/// the ninth, eleventh and thirteenth are the second, fourth and sixth.
+/// </summary>
 public readonly record struct Degree : IComparable<Degree>
 {
     public static Degree First => 1;

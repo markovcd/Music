@@ -1,42 +1,17 @@
 namespace Domain;
 
 /// <summary>
-/// Names a chord from the pitches that sound together.
+/// Names a chord from the notes that sound together, using the qualities in <see cref="ChordQualities"/>.
+/// Roots are spelled in the conventional way (Eb and Bb, but F# and C#m), and a slash chord's bass note is
+/// spelled as the chord tone it is, so the third of Eb is written G and the third of Cm is written Eb.
+/// The spelling does not know the key: in Db major the chord on the fourth degree is named F#, not Gb.
 /// </summary>
 public static class ChordNamer
 {
-    // Quality symbol and its semitones above the root. The order is the order of preference
-    // when the same notes can be named in more than one way with the same root and bass.
-    private static readonly (string Symbol, int[] Semitones)[] Qualities =
-    {
-        ("", new[] { 0, 4, 7 }),
-        ("m", new[] { 0, 3, 7 }),
-        ("dim", new[] { 0, 3, 6 }),
-        ("aug", new[] { 0, 4, 8 }),
-        ("sus2", new[] { 0, 2, 7 }),
-        ("sus4", new[] { 0, 5, 7 }),
-        ("5", new[] { 0, 7 }),
-        ("6", new[] { 0, 4, 7, 9 }),
-        ("m6", new[] { 0, 3, 7, 9 }),
-        ("7", new[] { 0, 4, 7, 10 }),
-        ("maj7", new[] { 0, 4, 7, 11 }),
-        ("m7", new[] { 0, 3, 7, 10 }),
-        ("mMaj7", new[] { 0, 3, 7, 11 }),
-        ("m7b5", new[] { 0, 3, 6, 10 }),
-        ("dim7", new[] { 0, 3, 6, 9 }),
-        ("7sus4", new[] { 0, 5, 7, 10 }),
-        ("aug7", new[] { 0, 4, 8, 10 }),
-        ("add9", new[] { 0, 2, 4, 7 }),
-        ("madd9", new[] { 0, 2, 3, 7 }),
-        ("9", new[] { 0, 2, 4, 7, 10 }),
-        ("maj9", new[] { 0, 2, 4, 7, 11 }),
-        ("m9", new[] { 0, 2, 3, 7, 10 }),
-    };
-
-    private static readonly IReadOnlyDictionary<int, (string Symbol, int Order)> QualityByIntervals =
-        Qualities
-            .Select((q, order) => (Key: Intervals.Create(q.Semitones.Select(s => new Interval(s))).Value, q.Symbol, Order: order))
-            .ToDictionary(t => t.Key, t => (t.Symbol, t.Order));
+    private static readonly IReadOnlyDictionary<int, (ChordQuality Quality, int Order)> QualityByIntervals =
+        ChordQualities.All
+            .Select((quality, order) => (Quality: quality, Order: order))
+            .ToDictionary(t => t.Quality.Intervals.Value);
 
     /// <summary>
     /// Returns every chord name that fits the given pitches, best first.
@@ -49,19 +24,30 @@ public static class ChordNamer
         var sounding = pitches.ToList();
         if (sounding.Count == 0) return Array.Empty<ChordName>();
 
-        var bass = sounding.Min().Note;
-        var notes = sounding.Select(p => p.Note).Distinct().ToList();
+        return Detect(sounding.Select(p => p.Note), sounding.Min().Note);
+    }
+
+    /// <summary>
+    /// Like <see cref="Detect(IEnumerable{Pitch})"/> for notes without octaves.
+    /// <paramref name="bass"/> is the lowest note and must be one of <paramref name="notes"/>.
+    /// </summary>
+    public static IReadOnlyList<ChordName> Detect(IEnumerable<Note> notes, Note bass)
+    {
+        var distinct = notes.Distinct().ToList();
+
+        if (!distinct.Contains(bass))
+            throw new ArgumentException("The bass note must be one of the notes.", nameof(bass));
 
         var candidates = new List<(ChordName Name, int Order)>();
 
-        foreach (var root in notes)
+        foreach (var root in distinct)
         {
             var intervals = Intervals.Create(
-                notes.Select(n => new Interval(Math.Modulo(n - root, Note.TotalNotes))));
+                distinct.Select(n => new Interval(Math.Modulo(n - root, Note.TotalNotes))));
 
-            if (!QualityByIntervals.TryGetValue(intervals.Value, out var quality)) continue;
+            if (!QualityByIntervals.TryGetValue(intervals.Value, out var match)) continue;
 
-            candidates.Add((new ChordName(root, quality.Symbol, root == bass ? null : bass), quality.Order));
+            candidates.Add((CreateName(root, match.Quality, bass), match.Order));
         }
 
         return candidates
@@ -70,5 +56,21 @@ public static class ChordNamer
             .ThenBy(c => c.Name.Root)
             .Select(c => c.Name)
             .ToList();
+    }
+
+    private static ChordName CreateName(Note root, ChordQuality quality, Note bass)
+    {
+        var rootName = NoteSpelling.SpellRoot(root, quality.HasMinorThird);
+
+        if (root == bass)
+            return new ChordName(root, quality.Symbol) { RootName = rootName };
+
+        var bassTone = quality.Tones.First(t => root + new Interval(t.Semitones) == bass);
+
+        return new ChordName(root, quality.Symbol, bass)
+        {
+            RootName = rootName,
+            BassName = NoteSpelling.SpellTone(rootName, bassTone.LetterSteps, bass, quality.HasMinorThird),
+        };
     }
 }
