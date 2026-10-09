@@ -7,10 +7,59 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance local:FretboardViewModel}">
   <DockPanel>
-    <TextBlock DockPanel.Dock="Top"
-               Text="{Binding ChordNames.Value}"
-               FontSize="24"
-               Margin="8"/>
+    <StackPanel DockPanel.Dock="Top" Margin="8">
+      <TextBlock Text="{Binding ChordNames.Value}"
+                 FontSize="24"/>
+
+      <WrapPanel Margin="0,8,0,0">
+        <CheckBox Content="Show scale"
+                  IsChecked="{Binding ShowScale.Value}"
+                  VerticalAlignment="Center"
+                  Margin="0,0,8,0"/>
+        <ComboBox ItemsSource="{Binding Roots}"
+                  SelectedItem="{Binding SelectedRoot.Value}"
+                  Width="60"
+                  Margin="0,0,8,0"/>
+        <ComboBox ItemsSource="{Binding Scales}"
+                  SelectedItem="{Binding SelectedScale.Value}"
+                  DisplayMemberPath="Name"
+                  Width="150"
+                  Margin="0,0,8,0"/>
+        <TextBlock Text="{Binding ScaleNotes.Value}"
+                   VerticalAlignment="Center"/>
+      </WrapPanel>
+      <TextBlock Text="{Binding ScaleChords.Value}"
+                 Margin="0,4,0,0"/>
+
+      <WrapPanel Margin="0,8,0,0">
+        <Button Content="Down"
+                Command="{Binding TransposeDown}"
+                Width="60"
+                Margin="0,0,4,0"/>
+        <Button Content="Up"
+                Command="{Binding TransposeUp}"
+                Width="60"
+                Margin="0,0,4,0"/>
+        <Button Content="Clear"
+                Command="{Binding ClearFrets}"
+                Width="60"
+                Margin="0,0,16,0"/>
+        <TextBlock Text="Find chord:"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"/>
+        <TextBox Text="{Binding ChordQuery.Value, UpdateSourceTrigger=PropertyChanged}"
+                 Width="100"
+                 Margin="0,0,8,0"/>
+        <TextBlock Text="{Binding ChordQueryStatus.Value}"
+                   VerticalAlignment="Center"/>
+      </WrapPanel>
+      <ListBox ItemsSource="{Binding Shapes.Value}"
+               SelectedItem="{Binding SelectedShape.Value}"
+               FontFamily="Consolas"
+               MaxHeight="110"
+               Margin="0,4,0,0"/>
+    </StackPanel>
+
     <ItemsControl ItemsSource="{Binding Strings.Value}">
 
       <ItemsControl.ItemsPanel>                              

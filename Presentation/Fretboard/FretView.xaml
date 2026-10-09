@@ -6,6 +6,22 @@
              xmlns:local="clr-namespace:Presentation.Fretboard"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance local:FretViewModel}">
-  <ToggleButton IsChecked="{Binding IsChecked.Value, Mode=TwoWay}"
-                Content="{Binding Caption.Value}"/>
+  <!-- The border marks the notes of the scale that is shown: blue for the notes, orange for the root. -->
+  <Border BorderThickness="3">
+    <Border.Style>
+      <Style TargetType="Border">
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding IsInScale.Value}" Value="True">
+            <Setter Property="BorderBrush" Value="SteelBlue"/>
+          </DataTrigger>
+          <DataTrigger Binding="{Binding IsScaleRoot.Value}" Value="True">
+            <Setter Property="BorderBrush" Value="DarkOrange"/>
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </Border.Style>
+    <ToggleButton IsChecked="{Binding IsChecked.Value, Mode=TwoWay}"
+                  Content="{Binding Caption.Value}"/>
+  </Border>
 </UserControl>

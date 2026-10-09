@@ -15,11 +15,20 @@ public sealed class FretViewModel : BindableBase<FretViewModel>
   /// <summary>The fret number, where 0 is the open string.</summary>
   public Interval Fret => interval;
 
+  /// <summary>The pitch that sounds when this fret is played.</summary>
+  public Pitch Pitch => pitch;
+
   public IBindable<string> Caption { get; init; }
   
   public IBindable<bool> IsChecked { get; init; }
   
   public IBindable<bool> IsZero { get; init; }
+
+  /// <summary>True if the note of this fret is in the scale that is shown.</summary>
+  public IBindable<bool> IsInScale { get; init; }
+
+  /// <summary>True if the note of this fret is the root of the scale that is shown.</summary>
+  public IBindable<bool> IsScaleRoot { get; init; }
 
   public FretViewModel()
   {
@@ -34,6 +43,17 @@ public sealed class FretViewModel : BindableBase<FretViewModel>
     IsZero.Value = interval == Interval.Tonic;
   }
   
+  /// <summary>
+  /// Marks the fret as part of the scale that is shown and names its note the way the scale does.
+  /// Pass null if the note is not in the scale, which shows the fret as usual.
+  /// </summary>
+  public void SetScale(string? noteName, bool isRoot)
+  {
+    IsInScale.Value = noteName is not null;
+    IsScaleRoot.Value = noteName is not null && isRoot;
+    Caption.Value = noteName is null ? pitch.ToString() : $"{noteName}{pitch.Octave}";
+  }
+
   internal static FretViewModel Create(Pitch pitch, Interval interval)
   {
     var fret = new FretViewModel();

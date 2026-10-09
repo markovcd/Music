@@ -6,7 +6,7 @@
         xmlns:fretboard="clr-namespace:Presentation.Fretboard"
         xmlns:local="clr-namespace:Presentation"
         mc:Ignorable="d"
-        Height="450" 
+        Height="700" 
         Width="800" 
         d:DataContext="{d:DesignInstance local:MainViewModel}">
         <fretboard:FretboardView DataContext="{Binding FretboardViewModel}" />
