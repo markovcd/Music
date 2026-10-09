@@ -30,6 +30,7 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
   private NoteNames? keyNames;
   private IReadOnlyDictionary<string, DomainFretboard> foundShapes = new Dictionary<string, DomainFretboard>();
   private bool isApplyingFrets;
+  private ChordName? queriedChord;
 
   public IBindable<IEnumerable<StringViewModel>> Strings { get; init; }
 
@@ -86,6 +87,12 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
   /// <summary>The chord to look for, for example "Am7" or "C/G".</summary>
   public IBindable<string> ChordQuery { get; init; }
 
+  /// <summary>
+  /// When true the notes of the chord in <see cref="ChordQuery"/> are marked on the strings, each with its place
+  /// in the chord (R, 3, b3, 5, b7 ...), whether or not there are shapes for it.
+  /// </summary>
+  public IBindable<bool> ShowChordTones { get; init; }
+
   /// <summary>"Not a chord", "No shapes found" or how many shapes were found for <see cref="ChordQuery"/>.</summary>
   public IBindable<string> ChordQueryStatus { get; init; }
 
@@ -123,6 +130,7 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
     SelectedScale.Value = Scales[0];
     ShowScale.Value = false;
     ChordQuery.Value = string.Empty;
+    ShowChordTones.Value = true;
 
     SelectedTuning.ListenForChange(_ => ApplyInstrument());
     SelectedCapo.ListenForChange(_ => ApplyInstrument());
@@ -130,6 +138,7 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
     SelectedRoot.ListenForChange(_ => UpdateScale());
     SelectedScale.ListenForChange(_ => UpdateScale());
     ChordQuery.ListenForChange(_ => UpdateShapes());
+    ShowChordTones.ListenForChange(_ => UpdateChordTones());
     SelectedShape.ListenForChange(_ => ApplySelectedShape());
 
     ApplyInstrument();
@@ -292,6 +301,8 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
     var found = new Dictionary<string, DomainFretboard>();
     var text = ChordQuery.Value?.Trim() ?? string.Empty;
 
+    queriedChord = null;
+
     if (text.Length == 0 || tunings.IsEmpty)
     {
       ChordQueryStatus.Value = string.Empty;
@@ -302,6 +313,8 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
     }
     else
     {
+      queriedChord = chord;
+
       foreach (var shape in ChordShapeFinder.Find(new DomainFretboard(tunings, fretCount), chord, maxResults: MaxShapes))
         found[shape.Diagram] = shape;
 
@@ -312,6 +325,18 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
 
     foundShapes = found;
     Shapes.Value = found.Keys.ToImmutableList();
+
+    UpdateChordTones();
+  }
+
+  private void UpdateChordTones()
+  {
+    if (Strings.Value is null) return;
+
+    var labels = ShowChordTones.Value && queriedChord is { } chord ? chord.GetToneLabels() : null;
+
+    foreach (var fret in AllFrets)
+      fret.SetChordTone(labels is not null && labels.TryGetValue(fret.Pitch.Note, out var label) ? label : null);
   }
 
   private void ApplySelectedShape()

@@ -101,7 +101,7 @@ public class XamlBindingTests
         bound.Should().Contain(new[]
         {
             "ChordNames", "Tunings", "SelectedTuning", "Capos", "SelectedCapo", "ShowScale", "Roots", "SelectedRoot", "Scales", "SelectedScale", "ScaleNotes", "ScaleChords",
-            "TransposeUp", "TransposeDown", "ClearFrets", "ChordQuery", "ChordQueryStatus", "Shapes", "SelectedShape", "Strings",
+            "TransposeUp", "TransposeDown", "ClearFrets", "ChordQuery", "ChordQueryStatus", "ShowChordTones", "Shapes", "SelectedShape", "Strings",
         });
     }
 
@@ -111,7 +111,10 @@ public class XamlBindingTests
         var xaml = File.ReadAllText(Path.Combine(PresentationDirectory(), "Fretboard", "FretView.xaml"));
         var bound = Binding.Matches(xaml).Select(m => m.Groups["path"].Value).ToHashSet();
 
-        bound.Should().Contain(new[] { "IsChecked", "Caption", "IsInScale", "IsScaleRoot" });
+        bound.Should().Contain(new[]
+        {
+            "IsChecked", "Caption", "IsInScale", "IsScaleRoot", "IsChordTone", "IsChordRoot", "ChordToneLabel",
+        });
     }
 
     [Test]

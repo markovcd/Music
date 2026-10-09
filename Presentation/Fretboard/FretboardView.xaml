@@ -69,7 +69,11 @@
                  Width="100"
                  Margin="0,0,8,0"/>
         <TextBlock Text="{Binding ChordQueryStatus.Value}"
-                   VerticalAlignment="Center"/>
+                   VerticalAlignment="Center"
+                   Margin="0,0,16,0"/>
+        <CheckBox Content="Show chord tones"
+                  IsChecked="{Binding ShowChordTones.Value}"
+                  VerticalAlignment="Center"/>
       </WrapPanel>
       <ListBox ItemsSource="{Binding Shapes.Value}"
                SelectedItem="{Binding SelectedShape.Value}"

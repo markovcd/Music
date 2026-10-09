@@ -252,4 +252,68 @@ public class ChordNameParseTests
             }
         }
     }
+
+    private static Dictionary<string, string> Labels(string chord)
+    {
+        return ChordName.Parse(chord).GetToneLabels().ToDictionary(p => p.Key.ToString(), p => p.Value);
+    }
+
+    [Test]
+    public void GetToneLabels_LabelsTheNotesOfATriad()
+    {
+        Labels("C").Should().Equal(new Dictionary<string, string> { ["C"] = "R", ["E"] = "3", ["G"] = "5" });
+        Labels("Am").Should().Equal(new Dictionary<string, string> { ["A"] = "R", ["C"] = "b3", ["E"] = "5" });
+    }
+
+    [Test]
+    public void GetToneLabels_LabelsTheNotesOfLargerChords()
+    {
+        Labels("Am7").Should().Equal(new Dictionary<string, string> { ["A"] = "R", ["C"] = "b3", ["E"] = "5", ["G"] = "b7" });
+        Labels("G7b9").Should().Equal(new Dictionary<string, string>
+            { ["G"] = "R", ["B"] = "3", ["D"] = "5", ["F"] = "b7", ["G#"] = "b9" });
+        Labels("C13").Should().Equal(new Dictionary<string, string>
+            { ["C"] = "R", ["E"] = "3", ["G"] = "5", ["A#"] = "b7", ["D"] = "9", ["A"] = "13" });
+    }
+
+    [Test]
+    public void GetToneLabels_OfAnAlias_UsesTheStandardQuality()
+    {
+        Labels("CM7").Should().Equal(Labels("Cmaj7"));
+        Labels("CM7")["B"].Should().Be("7");
+    }
+
+    [Test]
+    public void GetToneLabels_OfASlashChord_LabelsABassThatIsPartOfTheChordAsUsual()
+    {
+        Labels("C/G").Should().Equal(Labels("C"));
+        Labels("C/G")["G"].Should().Be("5");
+    }
+
+    [Test]
+    public void GetToneLabels_OfASlashChord_LabelsABassThatIsNotPartOfTheChord()
+    {
+        var labels = Labels("C/D");
+
+        labels["D"].Should().Be("bass");
+        labels["C"].Should().Be("R");
+        labels.Should().HaveCount(4);
+    }
+
+    [Test]
+    public void GetToneLabels_OfAnUnknownQuality_IsEmpty()
+    {
+        new ChordName(N("C"), "bogus").GetToneLabels().Should().BeEmpty();
+    }
+
+    [Test]
+    public void GetToneLabels_HasOneLabelForEveryNoteOfEveryQuality()
+    {
+        foreach (var quality in ChordQualities.All)
+        {
+            var labels = new ChordName(N("D"), quality.Symbol).GetToneLabels();
+
+            labels.Should().HaveCount(quality.Tones.Count, quality.Symbol);
+            labels[N("D")].Should().Be("R", quality.Symbol);
+        }
+    }
 }

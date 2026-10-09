@@ -72,6 +72,25 @@ public readonly record struct ChordName(Note Root, string Quality, Note? Bass = 
             : throw new FormatException($"\"{text}\" is not a chord symbol.");
     }
 
+    /// <summary>
+    /// The notes of the chord with the label each has in the chord: "R" for the root, then "3", "b3", "5", "b7", "9" and so on.
+    /// A bass note that is not part of the chord is labelled "bass". Empty if the quality is not known.
+    /// </summary>
+    public IReadOnlyDictionary<Note, string> GetToneLabels()
+    {
+        var labels = new Dictionary<Note, string>();
+
+        if (ChordQualities.Find(Quality) is not { } quality) return labels;
+
+        foreach (var tone in quality.Tones)
+            labels[Root + new Interval(tone.Semitones)] = tone.Label;
+
+        if (Bass is { } bass)
+            labels.TryAdd(bass, "bass");
+
+        return labels;
+    }
+
     public override string ToString()
     {
         return Bass is { } bass && bass != Root

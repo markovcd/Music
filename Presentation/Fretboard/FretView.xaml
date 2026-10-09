@@ -21,7 +21,31 @@
         </Style.Triggers>
       </Style>
     </Border.Style>
-    <ToggleButton IsChecked="{Binding IsChecked.Value, Mode=TwoWay}"
-                  Content="{Binding Caption.Value}"/>
+    <!-- The inner border marks the notes of the chord in the Find chord box: green, and red for the root. -->
+    <Border BorderThickness="2">
+      <Border.Style>
+        <Style TargetType="Border">
+          <Setter Property="BorderBrush" Value="Transparent"/>
+          <Style.Triggers>
+            <DataTrigger Binding="{Binding IsChordTone.Value}" Value="True">
+              <Setter Property="BorderBrush" Value="SeaGreen"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsChordRoot.Value}" Value="True">
+              <Setter Property="BorderBrush" Value="Crimson"/>
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </Border.Style>
+      <ToggleButton IsChecked="{Binding IsChecked.Value, Mode=TwoWay}">
+        <StackPanel>
+          <TextBlock Text="{Binding Caption.Value}"
+                     HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding ChordToneLabel.Value}"
+                     HorizontalAlignment="Center"
+                     FontSize="10"
+                     FontWeight="Bold"/>
+        </StackPanel>
+      </ToggleButton>
+    </Border>
   </Border>
 </UserControl>

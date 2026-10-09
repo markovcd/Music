@@ -4,10 +4,11 @@ using System.Text.RegularExpressions;
 namespace Domain;
 
 /// <summary>
-/// One note of a chord quality: how many semitones it is above the root and how many letter names
-/// above the root's letter it is spelled (a third is 2 letters up, a fifth 4, a seventh 6, and so on).
+/// One note of a chord quality: how many semitones it is above the root, how many letter names
+/// above the root's letter it is spelled (a third is 2 letters up, a fifth 4, a seventh 6, and so on)
+/// and the label it has in the formula: "R" for the root, then "b3", "5", "b7", "9", "#11" and so on.
 /// </summary>
-public readonly record struct ChordTone(int Semitones, int LetterSteps);
+public readonly record struct ChordTone(int Semitones, int LetterSteps, string Label);
 
 /// <summary>
 /// A kind of chord, such as minor seventh, defined by a symbol ("m7") and a formula ("1 b3 5 b7").
@@ -81,6 +82,9 @@ public sealed class ChordQuality
         var accidentals = match.Groups["accidentals"].Value;
         var alteration = accidentals.Count(c => c == '#') - accidentals.Count(c => c == 'b');
 
-        return new ChordTone(Math.Modulo(semitones + alteration, Note.TotalNotes), (degree - 1) % 7);
+        return new ChordTone(
+            Math.Modulo(semitones + alteration, Note.TotalNotes),
+            (degree - 1) % 7,
+            token == "1" ? "R" : token);
     }
 }

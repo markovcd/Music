@@ -155,4 +155,39 @@ public class ChordQualityTests
         spellings.Should().OnlyHaveUniqueItems();
         spellings.Should().HaveCount(ChordQualities.All.Count + ChordQualities.Aliases.Count);
     }
+
+    [Test]
+    [TestCase("1 3 5", "R 3 5")]
+    [TestCase("1 b3 5 b7", "R b3 5 b7")]
+    [TestCase("1 b3 b5 bb7", "R b3 b5 bb7")]
+    [TestCase("1 3 #5 7", "R 3 #5 7")]
+    [TestCase("1 3 5 b7 #9", "R 3 5 b7 #9")]
+    [TestCase("1 3 5 b7 9 13", "R 3 5 b7 9 13")]
+    [TestCase("1 5", "R 5")]
+    public void Constructor_LabelsTheTonesAsTheFormulaDoes(string formula, string labels)
+    {
+        new ChordQuality("x", formula).Tones.Select(t => t.Label).Should().Equal(labels.Split(' '));
+    }
+
+    [Test]
+    public void All_LabelsTheRootAndNothingElseAsR()
+    {
+        foreach (var quality in ChordQualities.All)
+        {
+            quality.Tones[0].Label.Should().Be("R", quality.Symbol);
+            quality.Tones.Skip(1).Select(t => t.Label).Should().NotContain("R", quality.Symbol);
+            quality.Tones.Select(t => t.Label).Should().OnlyHaveUniqueItems(quality.Symbol);
+        }
+    }
+
+    [Test]
+    public void All_LabelsEveryToneWithItsFormulaToken()
+    {
+        foreach (var quality in ChordQualities.All)
+        {
+            var tokens = quality.Formula.Split(' ').Select(t => t == "1" ? "R" : t);
+
+            quality.Tones.Select(t => t.Label).Should().Equal(tokens, quality.Symbol);
+        }
+    }
 }

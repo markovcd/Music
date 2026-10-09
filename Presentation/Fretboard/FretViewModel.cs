@@ -30,6 +30,15 @@ public sealed class FretViewModel : BindableBase<FretViewModel>
   /// <summary>True if the note of this fret is the root of the scale that is shown.</summary>
   public IBindable<bool> IsScaleRoot { get; init; }
 
+  /// <summary>The label of the note in the chord that is shown ("R", "3", "b7" ...), or empty if the note is not in it.</summary>
+  public IBindable<string> ChordToneLabel { get; init; }
+
+  /// <summary>True if the note of this fret is part of the chord that is shown.</summary>
+  public IBindable<bool> IsChordTone { get; init; }
+
+  /// <summary>True if the note of this fret is the root of the chord that is shown.</summary>
+  public IBindable<bool> IsChordRoot { get; init; }
+
   public FretViewModel()
   {
     RegisterProperties();
@@ -52,6 +61,17 @@ public sealed class FretViewModel : BindableBase<FretViewModel>
     IsInScale.Value = noteName is not null;
     IsScaleRoot.Value = noteName is not null && isRoot;
     Caption.Value = noteName is null ? pitch.ToString() : $"{noteName}{pitch.Octave}";
+  }
+
+  /// <summary>
+  /// Marks the fret as part of the chord that is shown, with the label the note has in the chord.
+  /// Pass null if the note is not in the chord.
+  /// </summary>
+  public void SetChordTone(string? label)
+  {
+    IsChordTone.Value = label is not null;
+    IsChordRoot.Value = label == "R";
+    ChordToneLabel.Value = label ?? string.Empty;
   }
 
   internal static FretViewModel Create(Pitch pitch, Interval interval)

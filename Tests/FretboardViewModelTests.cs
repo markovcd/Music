@@ -840,4 +840,199 @@ public class FretboardViewModelTests
         Fret(board, 0, 0).IsInScale.Value.Should().BeFalse();
         Fret(board, 0, 1).IsInScale.Value.Should().BeTrue();
     }
+
+    private static void ShouldMarkOnly(FretboardViewModel board, IReadOnlyDictionary<string, string> labels)
+    {
+        foreach (var fret in AllFrets(board))
+        {
+            var note = fret.Pitch.Note.ToString();
+
+            if (labels.TryGetValue(note, out var label))
+            {
+                fret.IsChordTone.Value.Should().BeTrue(fret.Pitch.ToString());
+                fret.ChordToneLabel.Value.Should().Be(label, fret.Pitch.ToString());
+                fret.IsChordRoot.Value.Should().Be(label == "R", fret.Pitch.ToString());
+            }
+            else
+            {
+                fret.IsChordTone.Value.Should().BeFalse(fret.Pitch.ToString());
+                fret.ChordToneLabel.Value.Should().BeEmpty(fret.Pitch.ToString());
+                fret.IsChordRoot.Value.Should().BeFalse(fret.Pitch.ToString());
+            }
+        }
+    }
+
+    private static readonly IReadOnlyDictionary<string, string> NoLabels = new Dictionary<string, string>();
+
+    [Test]
+    public void New_ShowsNoChordTones()
+    {
+        var board = new FretboardViewModel();
+
+        board.ShowChordTones.Value.Should().BeTrue();
+        ShouldMarkOnly(board, NoLabels);
+    }
+
+    [Test]
+    public void TypingAChord_MarksItsNotesWithTheirPlaceInTheChord()
+    {
+        var board = new FretboardViewModel();
+
+        board.ChordQuery.Value = "Am7";
+
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["A"] = "R", ["C"] = "b3", ["E"] = "5", ["G"] = "b7" });
+    }
+
+    [Test]
+    public void TypingAChord_MarksTheRootOnlyOnTheRoot()
+    {
+        var board = new FretboardViewModel();
+
+        board.ChordQuery.Value = "G7";
+
+        var roots = AllFrets(board).Where(f => f.IsChordRoot.Value).ToList();
+        roots.Should().NotBeEmpty();
+        roots.Should().OnlyContain(f => f.Pitch.Note == Note.Parse("G") && f.ChordToneLabel.Value == "R");
+    }
+
+    [Test]
+    public void TypingAChord_ByAnotherName_MarksTheSameNotes()
+    {
+        var board = new FretboardViewModel();
+
+        board.ChordQuery.Value = "CM7";
+
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["C"] = "R", ["E"] = "3", ["G"] = "5", ["B"] = "7" });
+    }
+
+    [Test]
+    public void TypingASlashChord_LabelsTheBass()
+    {
+        var board = new FretboardViewModel();
+
+        board.ChordQuery.Value = "C/D";
+
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["C"] = "R", ["E"] = "3", ["G"] = "5", ["D"] = "bass" });
+    }
+
+    [Test]
+    public void ChangingTheChord_ChangesTheMarks()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "Am";
+
+        board.ChordQuery.Value = "Em";
+
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["E"] = "R", ["G"] = "b3", ["B"] = "5" });
+    }
+
+    [Test]
+    public void ClearingTheChord_RemovesTheMarks()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "Am";
+
+        board.ChordQuery.Value = "";
+        ShouldMarkOnly(board, NoLabels);
+    }
+
+    [Test]
+    public void TypingSomethingThatIsNotAChord_RemovesTheMarks()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "Am";
+
+        board.ChordQuery.Value = "Xyz";
+
+        ShouldMarkOnly(board, NoLabels);
+    }
+
+    [Test]
+    public void TurningChordTonesOff_RemovesTheMarks_AndOnRestoresThem()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "Am";
+
+        board.ShowChordTones.Value = false;
+        ShouldMarkOnly(board, NoLabels);
+
+        board.ShowChordTones.Value = true;
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["A"] = "R", ["C"] = "b3", ["E"] = "5" });
+    }
+
+    [Test]
+    public void TypingAChord_WhileChordTonesAreOff_MarksNothing()
+    {
+        var board = new FretboardViewModel();
+        board.ShowChordTones.Value = false;
+
+        board.ChordQuery.Value = "Am";
+
+        ShouldMarkOnly(board, NoLabels);
+    }
+
+    [Test]
+    public void ChordTones_AreMarkedEvenWhenThereAreNoShapes()
+    {
+        var board = new FretboardViewModel();
+        board.Initialize(new[] { P("E", 4), P("B", 3) });
+
+        board.ChordQuery.Value = "C";
+
+        board.ChordQueryStatus.Value.Should().Be("No shapes found");
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["C"] = "R", ["E"] = "3", ["G"] = "5" });
+    }
+
+    [Test]
+    public void ChordTones_FollowTheTuningAndTheCapo()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "Am";
+
+        board.SelectedTuning.Value = TuningTemplates.Bass;
+        board.SelectedCapo.Value = 2;
+
+        AllFrets(board).Should().HaveCount(4 * 22);
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["A"] = "R", ["C"] = "b3", ["E"] = "5" });
+    }
+
+    [Test]
+    public void ChordTones_AndTheScale_AreMarkedSeparately()
+    {
+        var board = new FretboardViewModel();
+        ShowScale(board, "C", "Major");
+
+        board.ChordQuery.Value = "F#";
+
+        // F# is not in C major.
+        var fSharp = AllFrets(board).First(f => f.Pitch.Note == Note.Parse("F#"));
+        fSharp.IsChordTone.Value.Should().BeTrue();
+        fSharp.IsInScale.Value.Should().BeFalse();
+
+        var e = AllFrets(board).First(f => f.Pitch.Note == Note.Parse("E"));
+        e.IsInScale.Value.Should().BeTrue();
+        e.IsChordTone.Value.Should().BeFalse();
+    }
+
+    [Test]
+    public void ChordTones_DoNotChangeTheFretNames()
+    {
+        var board = new FretboardViewModel();
+
+        board.ChordQuery.Value = "Am";
+
+        Fret(board, 0, 0).Caption.Value.Should().Be("E4");
+        Fret(board, 5, 5).Caption.Value.Should().Be("A2");
+    }
+
+    [Test]
+    public void ChoosingAShape_LeavesTheChordTonesMarked()
+    {
+        var board = new FretboardViewModel();
+        board.ChordQuery.Value = "Am";
+
+        board.SelectedShape.Value = "x 0 2 2 1 0";
+
+        ShouldMarkOnly(board, new Dictionary<string, string> { ["A"] = "R", ["C"] = "b3", ["E"] = "5" });
+    }
 }
