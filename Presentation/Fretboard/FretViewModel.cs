@@ -12,6 +12,9 @@ public sealed class FretViewModel : BindableBase<FretViewModel>
   private Pitch pitch;
   private Interval interval;
 
+  /// <summary>The fret number, where 0 is the open string.</summary>
+  public Interval Fret => interval;
+
   public IBindable<string> Caption { get; init; }
   
   public IBindable<bool> IsChecked { get; init; }

@@ -6,9 +6,13 @@
              xmlns:local="clr-namespace:Presentation.Fretboard"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance local:FretboardViewModel}">
-  <Grid>
+  <DockPanel>
+    <TextBlock DockPanel.Dock="Top"
+               Text="{Binding ChordNames.Value}"
+               FontSize="24"
+               Margin="8"/>
     <ItemsControl ItemsSource="{Binding Strings.Value}">
-    
+
       <ItemsControl.ItemsPanel>                              
         <ItemsPanelTemplate>
           <UniformGrid Columns="1" />
@@ -21,5 +25,5 @@
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
-  </Grid>
+  </DockPanel>
 </UserControl>
