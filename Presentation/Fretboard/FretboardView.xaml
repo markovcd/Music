@@ -19,6 +19,13 @@
                   SelectedItem="{Binding SelectedTuning.Value}"
                   DisplayMemberPath="Label"
                   Width="260"
+                  Margin="0,0,16,0"/>
+        <TextBlock Text="Capo:"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"/>
+        <ComboBox ItemsSource="{Binding Capos}"
+                  SelectedItem="{Binding SelectedCapo.Value}"
+                  Width="50"
                   Margin="0,0,8,0"/>
       </WrapPanel>
 

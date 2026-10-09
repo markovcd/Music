@@ -100,7 +100,7 @@ public class XamlBindingTests
 
         bound.Should().Contain(new[]
         {
-            "ChordNames", "Tunings", "SelectedTuning", "ShowScale", "Roots", "SelectedRoot", "Scales", "SelectedScale", "ScaleNotes", "ScaleChords",
+            "ChordNames", "Tunings", "SelectedTuning", "Capos", "SelectedCapo", "ShowScale", "Roots", "SelectedRoot", "Scales", "SelectedScale", "ScaleNotes", "ScaleChords",
             "TransposeUp", "TransposeDown", "ClearFrets", "ChordQuery", "ChordQueryStatus", "Shapes", "SelectedShape", "Strings",
         });
     }

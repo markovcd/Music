@@ -11,28 +11,32 @@ public static class ChordShapeFinder
 
     /// <summary>
     /// Returns playable shapes for the chord on the board's tuning, easiest first
-    /// (lowest on the neck, then most strings, then narrowest).
+    /// (by <see cref="Fingering.Difficulty"/>: few notes to press, no barre, a small stretch, low on the neck and few muted strings).
     /// </summary>
     /// <remarks>
     /// A shape sounds one fret per string or mutes the string, fits within <paramref name="maxSpan"/> frets (open strings
-    /// do not count), has no muted string between sounding ones, plays every note of the chord and has the chord's root
-    /// (or the note after the slash) as its lowest note. Chords of five or more notes may leave out the fifth.
+    /// do not count), needs at most <paramref name="maxFingers"/> fingers (see <see cref="Fingering"/>), has no muted
+    /// string between sounding ones, plays every note of the chord and has the chord's root (or the note after the
+    /// slash) as its lowest note. Chords of five or more notes may leave out the fifth.
     /// </remarks>
     /// <param name="board">The strings and number of frets to use. Frets already pressed on it are ignored.</param>
     /// <param name="chord">The chord, for example <c>ChordName.Parse("Am7")</c>.</param>
     /// <param name="maxSpan">The most frets a shape may cover, counting the first and last fretted one.</param>
     /// <param name="minStrings">The fewest strings that must sound.</param>
     /// <param name="maxResults">The most shapes to return.</param>
+    /// <param name="maxFingers">The most fingers a shape may need.</param>
     public static IReadOnlyList<Fretboard> Find(
         Fretboard board,
         ChordName chord,
         int maxSpan = 4,
         int minStrings = 3,
-        int maxResults = 12)
+        int maxResults = 12,
+        int maxFingers = 4)
     {
         if (maxSpan < 1) throw new ArgumentOutOfRangeException(nameof(maxSpan), maxSpan, null);
         if (minStrings < 1) throw new ArgumentOutOfRangeException(nameof(minStrings), minStrings, null);
         if (maxResults < 1) throw new ArgumentOutOfRangeException(nameof(maxResults), maxResults, null);
+        if (maxFingers < 1) throw new ArgumentOutOfRangeException(nameof(maxFingers), maxFingers, null);
 
         var quality = ChordQualities.Find(chord.Quality)
             ?? throw new ArgumentException($"\"{chord.Quality}\" is not a known chord quality.", nameof(chord));
@@ -49,13 +53,11 @@ public static class ChordShapeFinder
         required.Add(chord.Root);
         required.Add(bass);
 
-        var search = new Search(board, allowed, required, bass, maxSpan, minStrings);
+        var search = new Search(board, allowed, required, bass, maxSpan, minStrings, maxFingers);
         var empty = new Fretboard(board.Tunings, board.FretCount);
 
         return search.Run()
-            .OrderBy(s => s.MaxFret)
-            .ThenByDescending(s => s.Sounding)
-            .ThenBy(s => s.Span)
+            .OrderBy(s => s.Fingering.Difficulty)
             .ThenBy(s => s.Key, StringComparer.Ordinal)
             .Take(maxResults)
             .Select(s => s.Frets.Select((fret, i) => (fret, i))
@@ -64,7 +66,7 @@ public static class ChordShapeFinder
             .ToList();
     }
 
-    private sealed record Shape(int?[] Frets, int MaxFret, int Sounding, int Span, string Key);
+    private sealed record Shape(int?[] Frets, Fingering Fingering, string Key);
 
     private sealed class Search
     {
@@ -75,10 +77,11 @@ public static class ChordShapeFinder
         private readonly Note bass;
         private readonly int maxSpan;
         private readonly int minStrings;
+        private readonly int maxFingers;
 
         private readonly Dictionary<string, Shape> found = new();
 
-        public Search(Fretboard board, HashSet<Note> allowed, HashSet<Note> required, Note bass, int maxSpan, int minStrings)
+        public Search(Fretboard board, HashSet<Note> allowed, HashSet<Note> required, Note bass, int maxSpan, int minStrings, int maxFingers)
         {
             tunings = board.Tunings;
             fretCount = board.FretCount;
@@ -87,6 +90,7 @@ public static class ChordShapeFinder
             this.bass = bass;
             this.maxSpan = maxSpan;
             this.minStrings = minStrings;
+            this.maxFingers = maxFingers;
         }
 
         public IEnumerable<Shape> Run()
@@ -143,12 +147,11 @@ public static class ChordShapeFinder
             // No muted string between sounding ones.
             if (soundingStrings[^1] - soundingStrings[0] + 1 != soundingStrings.Count) return;
 
-            var fretted = soundingStrings.Select(i => frets[i]!.Value).Where(f => f > 0).ToList();
-            var hasOpenString = fretted.Count < soundingStrings.Count;
-            var maxFret = fretted.Count == 0 ? 0 : fretted.Max();
-            var span = fretted.Count == 0 ? 0 : maxFret - fretted.Min() + 1;
+            var fingering = Fingering.Analyze(frets);
+            var hasOpenString = soundingStrings.Any(i => frets[i] == 0);
 
-            if (hasOpenString && maxFret > OpenStringReach) return;
+            if (fingering.Fingers > maxFingers) return;
+            if (hasOpenString && fingering.HighestFret > OpenStringReach) return;
 
             var pitches = soundingStrings.Select(i => tunings[i] + new Interval(frets[i]!.Value)).ToList();
 
@@ -158,7 +161,7 @@ public static class ChordShapeFinder
             // Strings are listed highest first, a diagram is read from the lowest string.
             var key = string.Join(" ", frets.Reverse().Select(f => f?.ToString() ?? "x"));
 
-            found.TryAdd(key, new Shape((int?[])frets.Clone(), maxFret, soundingStrings.Count, span, key));
+            found.TryAdd(key, new Shape((int?[])frets.Clone(), fingering, key));
         }
     }
 }

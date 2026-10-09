@@ -719,4 +719,125 @@ public class FretboardViewModelTests
         board.ChordNames.Value.Should().StartWith("C");
         Diagram(board).Split(' ').Should().HaveCount(4);
     }
+
+    [Test]
+    public void New_HasNoCapo()
+    {
+        var board = new FretboardViewModel();
+
+        board.SelectedCapo.Value.Should().Be(0);
+        board.Capos.Should().Equal(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    }
+
+    [Test]
+    public void Capo_RaisesEveryStringAndShortensTheNeck()
+    {
+        var board = new FretboardViewModel();
+
+        board.SelectedCapo.Value = 2;
+
+        board.Strings.Value!.Select(s => s.ZeroFret.Caption.Value).Should().Equal("F#4", "C#4", "A3", "E3", "B2", "F#2");
+        board.Strings.Value!.Should().OnlyContain(s => s.Frets.Value!.Count() == 22);
+    }
+
+    [Test]
+    public void Capo_CountsFretsFromTheCapo()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedCapo.Value = 3;
+
+        // The fifth fret from the capo on the low string is the eighth fret: E2 + 8 = C3.
+        Fret(board, 5, 5).Pitch.Should().Be(P("C", 3));
+        Fret(board, 5, 0).Pitch.Should().Be(P("G", 2));
+    }
+
+    [Test]
+    public void Capo_NamesChordsByTheirRealNotes()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedCapo.Value = 2;
+
+        // The open E shape with a capo on the second fret is F#.
+        Check(board, "0 2 2 1 0 0");
+
+        board.ChordNames.Value.Should().Be("F#");
+    }
+
+    [Test]
+    public void Capo_FindsShapesRelativeToTheCapo()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedCapo.Value = 2;
+
+        board.ChordQuery.Value = "E";
+
+        // With the capo on fret 2, the D shape sounds E.
+        board.Shapes.Value.Should().Contain("x x 0 2 3 2");
+        board.ChordQueryStatus.Value.Should().EndWith("(counted from the capo)");
+
+        board.SelectedShape.Value = "x x 0 2 3 2";
+        board.ChordNames.Value.Should().Be("E");
+    }
+
+    [Test]
+    public void Capo_IsNotMentionedWithoutOne()
+    {
+        var board = new FretboardViewModel();
+
+        board.ChordQuery.Value = "E";
+
+        board.ChordQueryStatus.Value.Should().NotContain("capo");
+    }
+
+    [Test]
+    public void Capo_UnchecksTheFretsAndKeepsTheTuning()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedTuning.Value = TuningTemplates.DropD;
+        Check(board, "x 3 2 0 1 0");
+
+        board.SelectedCapo.Value = 1;
+
+        AllFrets(board).Should().OnlyContain(f => !f.IsChecked.Value);
+        board.SelectedTuning.Value.Should().BeSameAs(TuningTemplates.DropD);
+        board.Strings.Value!.Select(s => s.ZeroFret.Caption.Value).Should().Equal("F4", "C4", "G#3", "D#3", "A#2", "D#2");
+    }
+
+    [Test]
+    public void Tuning_KeepsTheCapo()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedCapo.Value = 2;
+
+        board.SelectedTuning.Value = TuningTemplates.Bass;
+
+        board.SelectedCapo.Value.Should().Be(2);
+        board.Strings.Value!.Select(s => s.ZeroFret.Caption.Value).Should().Equal("A2", "E2", "B1", "F#1");
+        board.Strings.Value!.Should().OnlyContain(s => s.Frets.Value!.Count() == 22);
+    }
+
+    [Test]
+    public void Capo_BackToNone_RestoresTheNeck()
+    {
+        var board = new FretboardViewModel();
+        board.SelectedCapo.Value = 5;
+
+        board.SelectedCapo.Value = 0;
+
+        board.Strings.Value!.Select(s => s.ZeroFret.Caption.Value).Should().Equal("E4", "B3", "G3", "D3", "A2", "E2");
+        board.Strings.Value!.Should().OnlyContain(s => s.Frets.Value!.Count() == 24);
+    }
+
+    [Test]
+    public void Capo_KeepsShowingTheScale()
+    {
+        var board = new FretboardViewModel();
+        ShowScale(board, "C", "Major");
+
+        board.SelectedCapo.Value = 2;
+
+        // F#4 (the open high string with the capo) is not in C major, but G4 (the next fret) is.
+        Fret(board, 0, 0).IsInScale.Value.Should().BeFalse();
+        Fret(board, 0, 1).IsInScale.Value.Should().BeTrue();
+    }
 }

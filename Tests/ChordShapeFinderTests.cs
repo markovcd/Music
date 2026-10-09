@@ -110,14 +110,94 @@ public class ChordShapeFinderTests
     }
 
     [Test]
-    public void Find_ReturnsEachShapeOnce_OrderedFromTheNutUp()
+    public void Find_ReturnsEachShapeOnce_EasiestFirst()
     {
         var shapes = ChordShapeFinder.Find(Fretboard.Standard(), ChordName.Parse("Am"), maxResults: 500);
 
         shapes.Select(s => s.Diagram).Should().OnlyHaveUniqueItems();
+        shapes.Select(s => Fingering.Analyze(s).Difficulty).Should().BeInAscendingOrder();
+    }
 
-        var highestFrets = shapes.Select(s => Frets(s.Diagram).Max() ?? 0).ToList();
-        highestFrets.Should().BeInAscendingOrder();
+    [Test]
+    [TestCase("C", "x 3 2 0 1 0")]
+    [TestCase("G", "3 2 0 0 0 3")]
+    [TestCase("Am", "x 0 2 2 1 0")]
+    [TestCase("E", "0 2 2 1 0 0")]
+    [TestCase("F", "1 3 3 2 1 1")]
+    [TestCase("G7", "3 2 0 0 0 1")]
+    public void Find_PutsTheShapeEveryoneLearnsFirst(string chord, string expected)
+    {
+        Diagrams(chord, 5).First().Should().Be(expected);
+    }
+
+    [Test]
+    public void Find_PrefersAFullChordToAFewStringsOfIt()
+    {
+        var shapes = Diagrams("C", 500);
+
+        shapes.ToList().IndexOf("x 3 2 0 1 0").Should().BeLessThan(shapes.ToList().IndexOf("x 3 2 0 x x"));
+    }
+
+    [Test]
+    public void Find_PrefersTheNutToAHigherBarre()
+    {
+        var shapes = Diagrams("F", 500).ToList();
+
+        shapes.Should().Contain("x 8 10 10 10 8");
+        shapes.IndexOf("1 3 3 2 1 1").Should().BeLessThan(shapes.IndexOf("x 8 10 10 10 8"));
+    }
+
+    [Test]
+    [TestCase(2)]
+    [TestCase(3)]
+    [TestCase(4)]
+    public void Find_WithMaxFingers_OnlyReturnsShapesThatNeedNoMoreFingers(int maxFingers)
+    {
+        var shapes = ChordShapeFinder.Find(Fretboard.Standard(), ChordName.Parse("G7"), maxFingers: maxFingers, maxResults: 500);
+
+        shapes.Should().OnlyContain(s => Fingering.Analyze(s).Fingers <= maxFingers);
+    }
+
+    [Test]
+    public void Find_WithOneFinger_FindsNothingForAChordWithFourNotesAndNoBarre()
+    {
+        ChordShapeFinder.Find(Fretboard.Standard(), ChordName.Parse("G7"), maxFingers: 1, maxResults: 500).Should().BeEmpty();
+    }
+
+    [Test]
+    public void Find_WithOneFinger_FindsShapesWhereOneFingerLiesAcrossStrings()
+    {
+        // The two notes at fret 2 share a flat finger. The power chord on C needs fingers on frets 3 and 5.
+        var shapes = ChordShapeFinder.Find(Fretboard.Standard(), ChordName.Parse("E5"), maxFingers: 1, maxResults: 500);
+
+        shapes.Select(s => s.Diagram).Should().Contain("0 2 2 x x x");
+        shapes.Should().OnlyContain(s => Fingering.Analyze(s).Fingers <= 1);
+        Diagrams("C5").Should().Contain("x 3 5 5 x x");
+        ChordShapeFinder.Find(Fretboard.Standard(), ChordName.Parse("C5"), maxFingers: 1, maxResults: 500)
+            .Select(s => s.Diagram).Should().NotContain("x 3 5 5 x x");
+    }
+
+    [Test]
+    public void Find_WithFewerFingers_FindsFewerShapes()
+    {
+        var chord = ChordName.Parse("G7");
+        var four = ChordShapeFinder.Find(Fretboard.Standard(), chord, maxFingers: 4, maxResults: 500);
+        var two = ChordShapeFinder.Find(Fretboard.Standard(), chord, maxFingers: 2, maxResults: 500);
+
+        two.Count.Should().BeLessThan(four.Count);
+        two.Select(s => s.Diagram).Should().BeSubsetOf(four.Select(s => s.Diagram));
+        four.Select(s => s.Diagram).Should().Contain("3 2 0 0 0 1");
+        two.Select(s => s.Diagram).Should().NotContain("3 2 0 0 0 1");
+    }
+
+    [Test]
+    public void Find_ByDefault_NeverNeedsMoreThanFourFingers()
+    {
+        foreach (var text in new[] { "C", "G", "Am7", "F#m7b5", "Bbmaj7", "C9", "E7#9" })
+        {
+            ChordShapeFinder.Find(Fretboard.Standard(), ChordName.Parse(text), maxResults: 500)
+                .Should().OnlyContain(s => Fingering.Analyze(s).Fingers <= 4, text);
+        }
     }
 
     [Test]
@@ -224,6 +304,7 @@ public class ChordShapeFinderTests
         ((Action)(() => ChordShapeFinder.Find(board, chord, maxSpan: 0))).Should().Throw<ArgumentOutOfRangeException>();
         ((Action)(() => ChordShapeFinder.Find(board, chord, minStrings: 0))).Should().Throw<ArgumentOutOfRangeException>();
         ((Action)(() => ChordShapeFinder.Find(board, chord, maxResults: 0))).Should().Throw<ArgumentOutOfRangeException>();
+        ((Action)(() => ChordShapeFinder.Find(board, chord, maxFingers: 0))).Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Test]

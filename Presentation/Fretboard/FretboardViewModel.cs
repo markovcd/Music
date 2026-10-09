@@ -46,6 +46,15 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
   /// <summary>The tuning of the strings. Choosing another one replaces the strings and unchecks every fret.</summary>
   public IBindable<NamedTuning> SelectedTuning { get; init; }
 
+  /// <summary>The frets a capo can be put on. 0 means no capo.</summary>
+  public IReadOnlyList<int> Capos { get; } = Enumerable.Range(0, 10).ToList();
+
+  /// <summary>
+  /// The fret of the capo. It raises every string, so the strings and shapes are counted from the capo
+  /// and the neck is shorter. Changing it replaces the strings and unchecks every fret.
+  /// </summary>
+  public IBindable<int> SelectedCapo { get; init; }
+
   /// <summary>The roots to choose from for the scale.</summary>
   public IReadOnlyList<string> Roots => RootNames;
 
@@ -109,12 +118,14 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
   private void SetUp()
   {
     SelectedTuning.Value = TuningTemplates.Standard;
+    SelectedCapo.Value = 0;
     SelectedRoot.Value = RootNames[0];
     SelectedScale.Value = Scales[0];
     ShowScale.Value = false;
     ChordQuery.Value = string.Empty;
 
     SelectedTuning.ListenForChange(_ => ApplyInstrument());
+    SelectedCapo.ListenForChange(_ => ApplyInstrument());
     ShowScale.ListenForChange(_ => UpdateScale());
     SelectedRoot.ListenForChange(_ => UpdateScale());
     SelectedScale.ListenForChange(_ => UpdateScale());
@@ -126,7 +137,9 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
 
   private void ApplyInstrument()
   {
-    Initialize(SelectedTuning.Value?.Pitches ?? TuningTemplates.Standard.Pitches);
+    var capo = SelectedCapo.Value;
+
+    Initialize((SelectedTuning.Value ?? TuningTemplates.Standard).PitchesWithCapo(capo), DefaultFretCount - capo);
   }
 
   public void Initialize(IEnumerable<Pitch> stringTunings, int fretCount = DefaultFretCount)
@@ -292,7 +305,9 @@ public sealed class FretboardViewModel : BindableBase<FretboardViewModel>
       foreach (var shape in ChordShapeFinder.Find(new DomainFretboard(tunings, fretCount), chord, maxResults: MaxShapes))
         found[shape.Diagram] = shape;
 
-      ChordQueryStatus.Value = found.Count == 0 ? "No shapes found" : $"{found.Count} shapes";
+      var counted = SelectedCapo.Value > 0 ? " (counted from the capo)" : string.Empty;
+
+      ChordQueryStatus.Value = found.Count == 0 ? "No shapes found" : $"{found.Count} shapes{counted}";
     }
 
     foundShapes = found;

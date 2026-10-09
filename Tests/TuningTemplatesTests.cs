@@ -142,4 +142,32 @@ public class TuningTemplatesTests
             board.GetChordNames().First().ToString().Should().Be(name, tuning.Name);
         }
     }
+
+    [Test]
+    public void PitchesWithCapo_RaisesEveryStringByTheFret()
+    {
+        TuningTemplates.Standard.PitchesWithCapo(2).Select(p => p.ToString())
+            .Should().Equal("F#4", "C#4", "A3", "E3", "B2", "F#2");
+    }
+
+    [Test]
+    public void PitchesWithCapo_AtTheNut_IsTheTuning()
+    {
+        TuningTemplates.DropD.PitchesWithCapo(0).Should().Equal(TuningTemplates.DropD.Pitches);
+    }
+
+    [Test]
+    public void PitchesWithCapo_CarriesOverIntoTheNextOctave()
+    {
+        TuningTemplates.Standard.PitchesWithCapo(7).Select(p => p.ToString())
+            .Should().Equal("B4", "F#4", "D4", "A3", "E3", "B2");
+    }
+
+    [Test]
+    public void PitchesWithCapo_BelowTheNut_Throws()
+    {
+        var act = () => TuningTemplates.Standard.PitchesWithCapo(-1);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
 }
