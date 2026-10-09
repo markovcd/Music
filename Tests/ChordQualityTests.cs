@@ -104,4 +104,21 @@ public class ChordQualityTests
     {
         ChordQualities.All.Should().OnlyContain(q => q.Tones[0].Semitones == 0 && q.Tones[0].LetterSteps == 0);
     }
+
+    [Test]
+    public void Find_ReturnsTheQualityWithThatSymbol()
+    {
+        ChordQualities.Find("m7").Should().BeSameAs(ChordQualities.All.Single(q => q.Symbol == "m7"));
+        ChordQualities.Find("6/9")!.Formula.Should().Be("1 3 5 6 9");
+        ChordQualities.Find("")!.Formula.Should().Be("1 3 5");
+    }
+
+    [Test]
+    [TestCase("M7")]
+    [TestCase("bogus")]
+    [TestCase("m ")]
+    public void Find_WithUnknownSymbol_ReturnsNull(string symbol)
+    {
+        ChordQualities.Find(symbol).Should().BeNull();
+    }
 }

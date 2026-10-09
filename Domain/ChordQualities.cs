@@ -7,6 +7,12 @@ namespace Domain;
 /// </summary>
 public static class ChordQualities
 {
+    /// <summary>The quality with the given symbol ("m7", "6/9", ...), or null if there is none. The symbol for a major chord is empty.</summary>
+    public static ChordQuality? Find(string symbol)
+    {
+        return All.FirstOrDefault(q => q.Symbol == symbol);
+    }
+
     public static IReadOnlyList<ChordQuality> All { get; } = new[]
     {
         // Triads and power chord

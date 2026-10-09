@@ -98,13 +98,30 @@ public sealed class Fretboard
         return new Fretboard(tunings, FretCount, transposed);
     }
 
-    /// <summary>The pitch that sounds on the string, or null if the string is muted.</summary>
-    public Pitch? GetPitch(int stringIndex)
+    /// <summary>The fret that sounds on the string (the highest pressed one), or null if the string is muted.</summary>
+    public Interval? GetFret(int stringIndex)
     {
         AssertString(stringIndex);
         var frets = pressed[stringIndex];
-        return frets.IsEmpty ? null : tunings[stringIndex] + frets.Max;
+        return frets.IsEmpty ? null : frets.Max;
     }
+
+    /// <summary>The pitch that sounds on the string, or null if the string is muted.</summary>
+    public Pitch? GetPitch(int stringIndex)
+    {
+        var fret = GetFret(stringIndex);
+        return fret.HasValue ? tunings[stringIndex] + fret.Value : null;
+    }
+
+    /// <summary>
+    /// The sounding fret of every string as chord diagrams are usually written, with "x" for a muted string,
+    /// starting from the last string, which is the lowest one on a board that lists the highest string first
+    /// (like <see cref="Standard"/>). For example "x 3 2 0 1 0" for an open C chord.
+    /// </summary>
+    public string Diagram =>
+        string.Join(" ", Enumerable.Range(0, StringCount).Reverse()
+            .Select(GetFret)
+            .Select(f => f.HasValue ? ((int)f.Value).ToString() : "x"));
 
     /// <summary>The pitches that sound, in string order. Muted strings are skipped.</summary>
     public IEnumerable<Pitch> GetPitches()

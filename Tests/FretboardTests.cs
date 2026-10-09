@@ -457,4 +457,47 @@ public class FretboardTests
         // D A D A, with the G string pressed on fret 2 (A): a D power chord.
         Names(board).Should().Equal("D5");
     }
+
+    [Test]
+    public void GetFret_IsTheHighestPressedFret()
+    {
+        var board = Fretboard.Standard().PressFret(4, 0).PressFret(4, 7).PressFret(4, 3);
+
+        board.GetFret(4).Should().Be(new Interval(7));
+    }
+
+    [Test]
+    public void GetFret_OfMutedString_IsNull()
+    {
+        Fretboard.Standard().PressFret(0, 1).GetFret(1).Should().BeNull();
+    }
+
+    [Test]
+    public void GetFret_OnMissingString_Throws()
+    {
+        var act = () => Fretboard.Standard().GetFret(6);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public void Diagram_ListsFretsFromTheLowestString()
+    {
+        Shape("x 3 2 0 1 0").Diagram.Should().Be("x 3 2 0 1 0");
+        Shape("3 2 0 0 0 3").Diagram.Should().Be("3 2 0 0 0 3");
+    }
+
+    [Test]
+    public void Diagram_OfEmptyBoard_IsAllMuted()
+    {
+        Fretboard.Standard().Diagram.Should().Be("x x x x x x");
+    }
+
+    [Test]
+    public void Diagram_ShowsTheSoundingFret_AndFretsAboveNine()
+    {
+        var board = Fretboard.Standard().PressFret(4, 0).PressFret(4, 12).PressFret(5, 3);
+
+        board.Diagram.Should().Be("3 12 x x x x");
+    }
 }
