@@ -32,11 +32,11 @@ public class IntervalsTests
   [TestCase(3, 0, 1)]
   public void GetAbsoluteIntervals_GetsIntervalsForGivenIndex(int scaleIndex, params int[] expectedIntervals)
   {
-    new Intervals(scaleIndex).ToImmutableArray()
+    // Interval has no public members, so compare the semitone values rather than the structures.
+    new Intervals(scaleIndex)
+      .Select(i => (int)i)
       .Should()
-      .BeEquivalentTo(
-        expectedIntervals.Select(i => new Interval(i)),
-        o => o.WithStrictOrdering());
+      .Equal(expectedIntervals);
   }
 
   [Test]
