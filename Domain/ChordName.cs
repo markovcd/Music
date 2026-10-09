@@ -20,9 +20,11 @@ public readonly record struct ChordName(Note Root, string Quality, Note? Bass = 
 
     /// <summary>
     /// Reads a chord symbol: a root (A-G, optionally followed by # or b), one of the symbols in
-    /// <see cref="ChordQualities"/> ("m7", "maj7", "7b9", ...; nothing for a major chord) and optionally
+    /// <see cref="ChordQualities"/> ("m7", "maj7", "7b9", ...; nothing for a major chord) or one of its
+    /// <see cref="ChordQualities.Aliases"/> ("M7", "min7", "-7", "ø", "+", ...) and optionally
     /// a slash and a bass note, for example "Bbmaj7", "F#m7b5", "C6/9" or "Am7/G".
-    /// The names are kept as typed, so "Db" stays Db.
+    /// The root and bass names are kept as typed, so "Db" stays Db; the quality is always the standard symbol,
+    /// so "CM7" is read as Cmaj7.
     /// </summary>
     public static bool TryParse(string? text, out ChordName chord)
     {
@@ -35,16 +37,15 @@ public readonly record struct ChordName(Note Root, string Quality, Note? Bass = 
         var rootName = text[..rootLength];
         var rest = text[rootLength..];
 
-        foreach (var quality in ChordQualities.All)
+        foreach (var (spelling, symbol) in ChordQualities.Spellings)
         {
-            var symbol = quality.Symbol;
             string? bassName = null;
 
-            if (rest != symbol)
+            if (rest != spelling)
             {
-                if (!rest.StartsWith(symbol + "/", StringComparison.Ordinal)) continue;
+                if (!rest.StartsWith(spelling + "/", StringComparison.Ordinal)) continue;
 
-                bassName = rest[(symbol.Length + 1)..];
+                bassName = rest[(spelling.Length + 1)..];
                 if (!NamePattern.IsMatch(bassName)) continue;
             }
 

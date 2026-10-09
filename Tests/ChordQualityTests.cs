@@ -121,4 +121,38 @@ public class ChordQualityTests
     {
         ChordQualities.Find(symbol).Should().BeNull();
     }
+
+    [Test]
+    public void Aliases_StandForQualitiesThatExist()
+    {
+        ChordQualities.Aliases.Should().NotBeEmpty();
+
+        foreach (var (alias, symbol) in ChordQualities.Aliases)
+            ChordQualities.Find(symbol).Should().NotBeNull($"\"{alias}\" stands for \"{symbol}\"");
+    }
+
+    [Test]
+    public void Aliases_AreNotAlsoStandardSymbols()
+    {
+        var symbols = ChordQualities.All.Select(q => q.Symbol).ToHashSet();
+
+        ChordQualities.Aliases.Keys.Should().NotContain(a => symbols.Contains(a));
+    }
+
+    [Test]
+    public void Aliases_CannotBeMistakenForPartOfTheRoot()
+    {
+        // A "#" or "b" straight after the letter is read as part of the root, so "C#5" is C#5, never Caug.
+        ChordQualities.Aliases.Keys.Should().NotContain(a => "#b♯♭".Contains(a[0]));
+        ChordQualities.Aliases.Keys.Should().NotContain(a => a.Length == 0 || char.IsWhiteSpace(a[0]) || a.Contains('/'));
+    }
+
+    [Test]
+    public void Spellings_ListEverySymbolAndEveryAlias()
+    {
+        var spellings = ChordQualities.All.Select(q => q.Symbol).Concat(ChordQualities.Aliases.Keys).ToList();
+
+        spellings.Should().OnlyHaveUniqueItems();
+        spellings.Should().HaveCount(ChordQualities.All.Count + ChordQualities.Aliases.Count);
+    }
 }

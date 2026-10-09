@@ -13,6 +13,54 @@ public static class ChordQualities
         return All.FirstOrDefault(q => q.Symbol == symbol);
     }
 
+    /// <summary>
+    /// Other ways chord symbols are written, each with the symbol it stands for: "M7" and "Δ" for "maj7",
+    /// "min7" and "-7" for "m7", "ø" for "m7b5", "+" for "aug" and so on.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> Aliases { get; } = new (string Alias, string Symbol)[]
+    {
+        ("maj", ""), ("major", ""), ("M", ""),
+        ("min", "m"), ("minor", "m"), ("mi", "m"), ("-", "m"),
+        ("o", "dim"), ("°", "dim"), ("mb5", "dim"),
+        ("+", "aug"), ("+5", "aug"),
+        ("sus", "sus4"),
+        ("min6", "m6"), ("mi6", "m6"), ("-6", "m6"),
+        ("69", "6/9"),
+        ("m69", "m6/9"), ("min69", "m6/9"),
+        ("M7", "maj7"), ("Δ", "maj7"), ("Δ7", "maj7"), ("ma7", "maj7"), ("major7", "maj7"),
+        ("min7", "m7"), ("mi7", "m7"), ("-7", "m7"),
+        ("mM7", "mMaj7"), ("mmaj7", "mMaj7"), ("minMaj7", "mMaj7"), ("m(maj7)", "mMaj7"), ("m(M7)", "mMaj7"),
+        ("-M7", "mMaj7"), ("-maj7", "mMaj7"),
+        ("ø", "m7b5"), ("ø7", "m7b5"), ("m7-5", "m7b5"), ("m7(b5)", "m7b5"), ("min7b5", "m7b5"), ("-7b5", "m7b5"),
+        ("o7", "dim7"), ("°7", "dim7"),
+        ("7(b5)", "7b5"), ("7-5", "7b5"),
+        ("+7", "aug7"), ("7+", "aug7"), ("7#5", "aug7"), ("7+5", "aug7"), ("7(#5)", "aug7"),
+        ("M7#5", "maj7#5"), ("maj7+", "maj7#5"), ("M7+", "maj7#5"),
+        ("7sus", "7sus4"),
+        ("9sus", "9sus4"),
+        ("(add9)", "add9"), ("add2", "add9"),
+        ("m(add9)", "madd9"), ("minadd9", "madd9"), ("-add9", "madd9"), ("madd2", "madd9"),
+        ("M9", "maj9"), ("Δ9", "maj9"), ("major9", "maj9"),
+        ("min9", "m9"), ("mi9", "m9"), ("-9", "m9"),
+        ("min11", "m11"), ("-11", "m11"),
+        ("M13", "maj13"), ("Δ13", "maj13"),
+        ("min13", "m13"), ("-13", "m13"),
+        ("7(b9)", "7b9"), ("7-9", "7b9"),
+        ("7(#9)", "7#9"), ("7+9", "7#9"),
+        ("7(#11)", "7#11"), ("7+11", "7#11"),
+        ("7(b13)", "7b13"),
+        ("7no5", "7(no5)"),
+        ("maj7no5", "maj7(no5)"), ("M7no5", "maj7(no5)"),
+        ("m7no5", "m7(no5)"), ("min7no5", "m7(no5)"),
+    }.ToDictionary(a => a.Alias, a => a.Symbol); // throws if an alias is listed twice
+
+    /// <summary>
+    /// Every way to write a quality, as the text that follows the root and the symbol it stands for:
+    /// the symbols themselves, then the aliases.
+    /// </summary>
+    internal static IEnumerable<KeyValuePair<string, string>> Spellings =>
+        All.Select(q => KeyValuePair.Create(q.Symbol, q.Symbol)).Concat(Aliases);
+
     public static IReadOnlyList<ChordQuality> All { get; } = new[]
     {
         // Triads and power chord

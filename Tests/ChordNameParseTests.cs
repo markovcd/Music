@@ -81,7 +81,9 @@ public class ChordNameParseTests
     [TestCase("7")]
     [TestCase("m")]
     [TestCase("Am7x")]
-    [TestCase("Cmaj")]
+    [TestCase("Cmajj")]
+    [TestCase("Cxyz")]
+    [TestCase("C#5/")]
     [TestCase("C/")]
     [TestCase("C/H")]
     [TestCase("C//E")]
@@ -149,5 +151,105 @@ public class ChordNameParseTests
 
         names.Should().NotBeEmpty();
         names.Select(n => ChordName.Parse(n.ToString())).Should().Equal(names);
+    }
+
+    [Test]
+    [TestCase("CM", "C", "")]
+    [TestCase("Cmaj", "C", "")]
+    [TestCase("Cmajor", "C", "")]
+    [TestCase("C-", "C", "m")]
+    [TestCase("Cmin", "C", "m")]
+    [TestCase("Cminor", "C", "m")]
+    [TestCase("CM7", "C", "maj7")]
+    [TestCase("Cma7", "C", "maj7")]
+    [TestCase("CΔ", "C", "maj7")]
+    [TestCase("CΔ7", "C", "maj7")]
+    [TestCase("Cmin7", "C", "m7")]
+    [TestCase("C-7", "C", "m7")]
+    [TestCase("CmM7", "C", "mMaj7")]
+    [TestCase("Cm(maj7)", "C", "mMaj7")]
+    [TestCase("Cø", "C", "m7b5")]
+    [TestCase("Cø7", "C", "m7b5")]
+    [TestCase("Cm7(b5)", "C", "m7b5")]
+    [TestCase("Co", "C", "dim")]
+    [TestCase("C°", "C", "dim")]
+    [TestCase("Co7", "C", "dim7")]
+    [TestCase("C°7", "C", "dim7")]
+    [TestCase("C+", "C", "aug")]
+    [TestCase("C+7", "C", "aug7")]
+    [TestCase("C7#5", "C", "aug7")]
+    [TestCase("Csus", "C", "sus4")]
+    [TestCase("C7sus", "C", "7sus4")]
+    [TestCase("C69", "C", "6/9")]
+    [TestCase("Cadd2", "C", "add9")]
+    [TestCase("C7(b9)", "C", "7b9")]
+    [TestCase("C7(#9)", "C", "7#9")]
+    [TestCase("C-9", "C", "m9")]
+    [TestCase("Bb-7", "Bb", "m7")]
+    [TestCase("F#ø", "F#", "m7b5")]
+    public void Parse_ReadsOtherWaysOfWritingAQuality(string text, string rootName, string quality)
+    {
+        var chord = ChordName.Parse(text);
+
+        chord.Root.Should().Be(N(rootName));
+        chord.RootName.Should().Be(rootName);
+        chord.Quality.Should().Be(quality);
+    }
+
+    [Test]
+    public void Parse_OfAnAlias_NamesTheChordWithTheStandardSymbol()
+    {
+        ChordName.Parse("CM7").ToString().Should().Be("Cmaj7");
+        ChordName.Parse("Bb-7").ToString().Should().Be("Bbm7");
+        ChordName.Parse("F#ø").ToString().Should().Be("F#m7b5");
+    }
+
+    [Test]
+    [TestCase("CM7/E", "maj7", "E")]
+    [TestCase("C-/Eb", "m", "Eb")]
+    [TestCase("C+/E", "aug", "E")]
+    [TestCase("Cø/Gb", "m7b5", "Gb")]
+    [TestCase("C69/E", "6/9", "E")]
+    public void Parse_ReadsAnAliasWithABass(string text, string quality, string bassName)
+    {
+        var chord = ChordName.Parse(text);
+
+        chord.Quality.Should().Be(quality);
+        chord.Bass.Should().Be(N(bassName));
+        chord.BassName.Should().Be(bassName);
+    }
+
+    [Test]
+    public void Parse_ReadsEveryAlias()
+    {
+        foreach (var (alias, symbol) in ChordQualities.Aliases)
+        {
+            ChordName.TryParse("D" + alias, out var chord).Should().BeTrue("D" + alias);
+            chord.Root.Should().Be(N("D"), "D" + alias);
+            chord.Quality.Should().Be(symbol, "D" + alias);
+            chord.Bass.Should().BeNull("D" + alias);
+
+            ChordName.TryParse("D" + alias + "/A", out var slash).Should().BeTrue("D" + alias + "/A");
+            slash.Quality.Should().Be(symbol, "D" + alias + "/A");
+            slash.Bass.Should().Be(N("A"), "D" + alias + "/A");
+        }
+    }
+
+    [Test]
+    public void Parse_ReadsEveryAliasOnEveryRoot()
+    {
+        var rootNames = new[] { "C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B" };
+
+        foreach (var (alias, symbol) in ChordQualities.Aliases)
+        {
+            for (var root = 0; root < 12; root++)
+            {
+                var text = rootNames[root] + alias;
+
+                ChordName.TryParse(text, out var chord).Should().BeTrue(text);
+                chord.Root.Should().Be(new Note(root), text);
+                chord.Quality.Should().Be(symbol, text);
+            }
+        }
     }
 }
