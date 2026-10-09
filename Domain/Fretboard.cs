@@ -115,10 +115,13 @@ public sealed class Fretboard
             .Select(p => p!.Value);
     }
 
-    /// <summary>The chord names that fit the pitches that sound, best first. See <see cref="ChordNamer"/>.</summary>
-    public IReadOnlyList<ChordName> GetChordNames()
+    /// <summary>
+    /// The chord names that fit the pitches that sound, best first. See <see cref="ChordNamer"/>.
+    /// Pass the note names of a key to spell the chords the way that key does.
+    /// </summary>
+    public IReadOnlyList<ChordName> GetChordNames(NoteNames? names = null)
     {
-        return ChordNamer.Detect(GetPitches());
+        return ChordNamer.Detect(GetPitches(), names);
     }
 
     private Fretboard ModifyString(

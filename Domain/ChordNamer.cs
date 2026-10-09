@@ -4,7 +4,8 @@ namespace Domain;
 /// Names a chord from the notes that sound together, using the qualities in <see cref="ChordQualities"/>.
 /// Roots are spelled in the conventional way (Eb and Bb, but F# and C#m), and a slash chord's bass note is
 /// spelled as the chord tone it is, so the third of Eb is written G and the third of Cm is written Eb.
-/// The spelling does not know the key: in Db major the chord on the fourth degree is named F#, not Gb.
+/// Pass the <see cref="NoteNames"/> of a key to spell the notes of that key the way the key does:
+/// in Db major the chord on the fourth degree is Gb, not F#. Notes outside the key keep the usual spelling.
 /// </summary>
 public static class ChordNamer
 {
@@ -19,19 +20,19 @@ public static class ChordNamer
     /// Returns an empty list if the pitches do not form a known chord
     /// (including when fewer than two different notes sound).
     /// </summary>
-    public static IReadOnlyList<ChordName> Detect(IEnumerable<Pitch> pitches)
+    public static IReadOnlyList<ChordName> Detect(IEnumerable<Pitch> pitches, NoteNames? names = null)
     {
         var sounding = pitches.ToList();
         if (sounding.Count == 0) return Array.Empty<ChordName>();
 
-        return Detect(sounding.Select(p => p.Note), sounding.Min().Note);
+        return Detect(sounding.Select(p => p.Note), sounding.Min().Note, names);
     }
 
     /// <summary>
-    /// Like <see cref="Detect(IEnumerable{Pitch})"/> for notes without octaves.
+    /// Like <see cref="Detect(IEnumerable{Pitch}, NoteNames)"/> for notes without octaves.
     /// <paramref name="bass"/> is the lowest note and must be one of <paramref name="notes"/>.
     /// </summary>
-    public static IReadOnlyList<ChordName> Detect(IEnumerable<Note> notes, Note bass)
+    public static IReadOnlyList<ChordName> Detect(IEnumerable<Note> notes, Note bass, NoteNames? names = null)
     {
         var distinct = notes.Distinct().ToList();
 
@@ -47,7 +48,7 @@ public static class ChordNamer
 
             if (!QualityByIntervals.TryGetValue(intervals.Value, out var match)) continue;
 
-            candidates.Add((CreateName(root, match.Quality, bass), match.Order));
+            candidates.Add((CreateName(root, match.Quality, bass, names), match.Order));
         }
 
         return candidates
@@ -58,9 +59,9 @@ public static class ChordNamer
             .ToList();
     }
 
-    private static ChordName CreateName(Note root, ChordQuality quality, Note bass)
+    private static ChordName CreateName(Note root, ChordQuality quality, Note bass, NoteNames? names)
     {
-        var rootName = NoteSpelling.SpellRoot(root, quality.HasMinorThird);
+        var rootName = names?.Find(root) ?? NoteSpelling.SpellRoot(root, quality.HasMinorThird);
 
         if (root == bass)
             return new ChordName(root, quality.Symbol) { RootName = rootName };
@@ -70,7 +71,8 @@ public static class ChordNamer
         return new ChordName(root, quality.Symbol, bass)
         {
             RootName = rootName,
-            BassName = NoteSpelling.SpellTone(rootName, bassTone.LetterSteps, bass, quality.HasMinorThird),
+            BassName = names?.Find(bass)
+                       ?? NoteSpelling.SpellTone(rootName, bassTone.LetterSteps, bass, quality.HasMinorThird),
         };
     }
 }
